@@ -27,7 +27,7 @@ class StackBrowser:
                 quit(0)
             elif event.type == pg.VIDEORESIZE:
                 (w, h) = event.dict['size']
-                (w0, h0) = self.viewers[0].background.get_size()
+                (w0, h0) = self.viewers[0].screen.get_size()
                 if w != w0:
                     h = h0 * w / w0
                 else:
