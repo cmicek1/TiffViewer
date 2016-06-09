@@ -1,7 +1,4 @@
 import pygame as pg
-import tiffstack as ts
-import Tkinter as Tk
-import tkFileDialog
 
 BIT_DEPTH = 8
 
@@ -9,6 +6,7 @@ BIT_DEPTH = 8
 class Viewer:
     def __init__(self, stack, caption="Stack Browser"):
         self.stack = stack
+        self.current_slice = 0
         pg.init()
         imarray = self.stack.getarray
         sz_to_use = tuple([imarray.shape[1], imarray.shape[2]])
@@ -18,26 +16,17 @@ class Viewer:
 
         self.background = pg.Surface(self.screen.get_size())
         self.background = self.background.convert()
-        pg.surfarray.blit_array(self.background, imarray[20])
-        self.screen.blit(self.background, (0, 0))
+        self.view_slice(self.background, self.current_slice)
         pg.display.flip()
 
+    def resize(self, size):
+        cap = pg.display.get_caption()
+        self.screen = pg.display.set_mode(size, pg.RESIZABLE, BIT_DEPTH)
+        pg.display.set_caption(cap[0])
+        newbg = pg.transform.scale(self.background, size)
+        self.screen.blit(newbg, (0, 0))
 
-def main():
-    root = Tk.Tk()
-    root.withdraw()
-    fpath = tkFileDialog.askopenfilename()
-    t = ts.TiffStack(fpath)
-    v = Viewer(t)
-    while 1:
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.display.quit()
-                quit(0)
-
-        v.screen.blit(v.background, (0, 0))
-        pg.display.flip()
-
-
-if __name__ == '__main__':
-    main()
+    def view_slice(self, background, z):
+        pg.surfarray.blit_array(background, self.stack.getarray[z])
+        self.screen.blit(background, (0, 0))
+        self.current_slice = z
