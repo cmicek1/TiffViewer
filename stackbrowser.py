@@ -35,6 +35,13 @@ class StackBrowser:
                         w = h * w0 / h0
 
                 self.viewers[0].resize((w, h))
+            elif event.type == pg.MOUSEBUTTONDOWN:
+                if event.button == 5:
+                    self.viewers[0].scroll('down')
+
+            elif event.type == pg.MOUSEBUTTONUP:
+                if event.button == 4:
+                    self.viewers[0].scroll('up')
 
     def start(self):
         while True:

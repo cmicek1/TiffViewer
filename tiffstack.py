@@ -9,3 +9,7 @@ class TiffStack:
     @property
     def getarray(self):
         return self.image.asarray()
+
+    @property
+    def maxz(self):
+        return self.getarray.shape[0] - 1

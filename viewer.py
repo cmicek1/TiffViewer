@@ -14,19 +14,36 @@ class Viewer:
                                           BIT_DEPTH)
         pg.display.set_caption(caption)
 
-        self.background = pg.Surface(self.screen.get_size())
-        self.background = self.background.convert()
-        self.view_slice(self.background, self.current_slice)
+        self.orig_bg = pg.Surface(self.screen.get_size())
+        self.orig_bg = self.orig_bg.convert()
+        self.curr_bg = self.orig_bg
+        self.view_slice(self.orig_bg, self.current_slice)
         pg.display.flip()
 
     def resize(self, size):
         cap = pg.display.get_caption()
         self.screen = pg.display.set_mode(size, pg.RESIZABLE, BIT_DEPTH)
         pg.display.set_caption(cap[0])
-        newbg = pg.transform.scale(self.background, size)
-        self.screen.blit(newbg, (0, 0))
+        self.curr_bg = pg.transform.scale(self.orig_bg, size)
+        self.screen.blit(self.curr_bg, (0, 0))
+
+    def scroll(self, direction):
+        if direction == 'up' and self.current_slice > 0:
+            self.current_slice -= 1
+            self.view_slice(self.curr_bg, self.current_slice)
+        elif direction == 'down'and self.current_slice < self.stack.maxz:
+            self.current_slice += 1
+            self.view_slice(self.curr_bg, self.current_slice)
 
     def view_slice(self, background, z):
-        pg.surfarray.blit_array(background, self.stack.getarray[z])
-        self.screen.blit(background, (0, 0))
+        imarray = self.stack.getarray[z]
+        if imarray.shape != background.get_size():
+            bgsurf = pg.Surface(imarray.shape, depth=BIT_DEPTH)
+            pg.surfarray.blit_array(bgsurf, imarray)
+            pg.transform.scale(bgsurf, background.get_size())
+            self.screen.blit(bgsurf, (0, 0))
+            self.curr_bg = bgsurf
+        else:
+            pg.surfarray.blit_array(background, imarray)
+            self.screen.blit(background, (0, 0))
         self.current_slice = z
