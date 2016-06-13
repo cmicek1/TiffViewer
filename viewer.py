@@ -1,26 +1,60 @@
 import pygame as pg
+import time
 
 BIT_DEPTH = 8
 
 
 class Viewer:
+    """
+    A viewer for multi-page TIFF stacks using PyGame for display/interface.
+    Currently, PyGame only supports one display at a time.
+    """
     def __init__(self, stack, caption="Stack Browser"):
+        """
+        Opens a PyGame display window for the given stack.
+
+        The current image is stored on a separate Surface from
+        the display window so their respective sizes are not
+        necessarily linked.
+
+        Note that the program as-is expects 8-bit L images.
+
+        :param stack: A TiffStack of the TIFF file to open.
+        :param caption: Caption for the window.
+
+        :type stack: tiffstack.TiffStack
+        :type caption: str
+        """
         self.stack = stack
         self.current_slice = 0
         pg.init()
         imarray = self.stack.getarray
+        # Use optimal starting size
         sz_to_use = tuple([imarray.shape[1], imarray.shape[2]])
         self.screen = pg.display.set_mode(sz_to_use, pg.RESIZABLE,
                                           BIT_DEPTH)
         pg.display.set_caption(caption)
 
+        # Create initial background surface
         self.orig_bg = pg.Surface(self.screen.get_size())
         self.orig_bg = self.orig_bg.convert()
+        # Now make a copy - this is what will be altered for zoom/
+        # resize operations
         self.curr_bg = self.orig_bg
         self.view_slice(self.orig_bg, self.current_slice)
         pg.display.flip()
 
     def resize(self, size):
+        """
+        Resizes the current image and window to the given size.
+
+        :param size: A tuple of (width, height) representing the
+                     new size of the image
+
+        :type size: tuple(int, int)
+
+        :rtype: None
+        """
         cap = pg.display.get_caption()
         self.screen = pg.display.set_mode(size, pg.RESIZABLE, BIT_DEPTH)
         pg.display.set_caption(cap[0])
@@ -28,6 +62,16 @@ class Viewer:
         self.screen.blit(self.curr_bg, (0, 0))
 
     def scroll(self, direction):
+        """
+        Scroll up or down through the stack, viewing the next
+        or previous image.
+
+        :param direction: The direction to scroll.
+
+        :type direction: str in ['up', 'down']
+
+        :rtype: None
+        """
         if direction == 'up' and self.current_slice > 0:
             self.current_slice -= 1
             self.view_slice(self.curr_bg, self.current_slice)
@@ -36,14 +80,35 @@ class Viewer:
             self.view_slice(self.curr_bg, self.current_slice)
 
     def view_slice(self, background, z):
+        """
+        Update the view of 'background' to display
+        the image at depth 'z'.
+
+        NOTE: This is currently the slowest part of the program, taking
+        about ~0.3 seconds. Will try to optimize before adding more
+        functionality.
+
+        :param background: The Surface of the current image.
+        :param z: The depth of the image to view.
+
+        :type background: pygame.Surface
+        :type z: int
+
+        :rtype: None
+        """
+        start_time = time.time()
         imarray = self.stack.getarray[z]
+
+        # Check if window has been resized. If so, resize
+        # next image to current window size.
         if imarray.shape != background.get_size():
             bgsurf = pg.Surface(imarray.shape, depth=BIT_DEPTH)
             pg.surfarray.blit_array(bgsurf, imarray)
-            pg.transform.scale(bgsurf, background.get_size())
+            bgsurf = pg.transform.scale(bgsurf, background.get_size())
             self.screen.blit(bgsurf, (0, 0))
             self.curr_bg = bgsurf
         else:
             pg.surfarray.blit_array(background, imarray)
             self.screen.blit(background, (0, 0))
         self.current_slice = z
+        print "--- {0} seconds ---".format(time.time() - start_time)
