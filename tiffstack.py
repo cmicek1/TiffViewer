@@ -18,17 +18,7 @@ class TiffStack:
         """
         self.directory = directory
         self.image = tf.TiffFile(self.directory)
-
-    @property
-    def getarray(self):
-        """
-        Get array representation of the stack.
-
-        :return: An array of shape (z, x, y)
-
-        :rtype: array
-        """
-        return self.image.asarray()
+        self.imarray = self.image.asarray()
 
     @property
     def maxz(self):
@@ -39,4 +29,4 @@ class TiffStack:
 
         :rtype: int
         """
-        return self.getarray.shape[0] - 1
+        return self.imarray.shape[0] - 1

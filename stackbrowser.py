@@ -23,7 +23,7 @@ class StackBrowser:
         root = Tk.Tk()
         root.withdraw()
         fpath = tkFileDialog.askopenfilename(
-            initialdir=os.path.expanduser('~/Desktop'))
+            initialdir=os.path.expanduser('~/Desktop/test'))
         t = ts.TiffStack(fpath)
         v = viewer.Viewer(t)
         # self.open_stacks.append(t)
@@ -42,7 +42,7 @@ class StackBrowser:
         for event in events:
             # Check for exit:
             if event.type == pg.QUIT:
-                pg.display.quit()
+                pg.quit()
                 quit(0)
 
             # Check for window resize (and
@@ -70,6 +70,29 @@ class StackBrowser:
                     self.viewers[0].scroll('up')
                 elif event.button == 5:
                     self.viewers[0].scroll('down')
+
+            elif event.type == pg.KEYDOWN:
+                if event.key == pg.K_UP:
+                    self.viewers[0].pan('up')
+                elif event.key == pg.K_DOWN:
+                    self.viewers[0].pan('down')
+                elif event.key == pg.K_LEFT:
+                    self.viewers[0].pan('left')
+                elif event.key == pg.K_RIGHT:
+                    self.viewers[0].pan('right')
+
+        # TODO: Currently too fast -> need to add a delay between keypresses
+
+        # pressed = pg.key.get_pressed()
+        #
+        # if pressed[pg.K_UP]:
+        #     self.viewers[0].pan('up')
+        # elif pressed[pg.K_DOWN]:
+        #     self.viewers[0].pan('down')
+        # elif pressed[pg.K_LEFT]:
+        #     self.viewers[0].pan('left')
+        # elif pressed[pg.K_RIGHT]:
+        #     self.viewers[0].pan('right')
 
     def start(self):
         """
