@@ -1,5 +1,4 @@
 import pygame as pg
-import time
 
 BIT_DEPTH = 8
 GRAY = (150, 150, 150)
@@ -47,7 +46,7 @@ class Viewer:
         self.view_slice(self.orig_bg, self.current_slice)
         pg.display.flip()
 
-    def view_slice(self, background, z):
+    def view_slice(self, background, z, size=None):
         """
         Update the view of 'background' to display
         the image at depth 'z'.
@@ -64,20 +63,20 @@ class Viewer:
 
         :rtype: None
         """
+        if size is None:
+            size = background.get_size()
         imarray = self.stack.imarray[z]
 
         # Check if window has been resized. If so, resize
         # next image to current window size.
         if imarray.shape != background.get_size():
-            bgsurf = pg.Surface(imarray.shape, depth=BIT_DEPTH)
-            pg.surfarray.blit_array(bgsurf, imarray)
-            self.orig_bg = bgsurf
-            bgsurf = pg.transform.scale(bgsurf, background.get_size())
+            pg.surfarray.blit_array(self.orig_bg, imarray)
+            self.curr_bg = pg.transform.scale(self.orig_bg, size)
             self.screen.fill(GRAY)
-            self.screen.blit(bgsurf, (self.curr_w, self.curr_h))
-            self.curr_bg = bgsurf
+            self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
         else:
             pg.surfarray.blit_array(background, imarray)
+            self.orig_bg = background
             self.screen.fill(GRAY)
             self.screen.blit(background, (self.curr_w, self.curr_h))
 
@@ -159,6 +158,23 @@ class Viewer:
     def zoom(self, direction):
         to_zoom = pg.mouse.get_pos()
         size = self.curr_bg.get_size()
-        if direction == 'in':
-            self.curr_bg = pg.transform.scale(self.orig_bg,
-                                              tuple(ZOOM_FACTOR * _ for _ in size))
+        if direction == 'center':
+            self.curr_w, self.curr_h = 0, 0
+            self.view_slice(self.curr_bg, self.current_slice,
+                            self.screen.get_size())
+
+        elif direction == 'in':
+            self.curr_bg = pg.transform.scale(
+                self.orig_bg, tuple(int(_ * ZOOM_FACTOR) for _ in size))
+            self.curr_w -= (to_zoom[0] * ZOOM_FACTOR - self.screen.get_size()[0] / 2)
+            self.curr_h -= (to_zoom[1] * ZOOM_FACTOR - self.screen.get_size()[1] / 2)
+            self.screen.fill(GRAY)
+            self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
+
+        elif direction == 'out':
+            self.curr_bg = pg.transform.scale(
+                self.orig_bg, tuple(int(_ / ZOOM_FACTOR) for _ in size))
+            self.curr_w -= (to_zoom[0] / ZOOM_FACTOR - self.screen.get_size()[0] / 2)
+            self.curr_h -= (to_zoom[1] / ZOOM_FACTOR - self.screen.get_size()[1] / 2)
+            self.screen.fill(GRAY)
+            self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))

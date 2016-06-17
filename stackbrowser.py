@@ -81,18 +81,12 @@ class StackBrowser:
                 elif event.key == pg.K_RIGHT:
                     self.viewers[0].pan('right')
 
-        # TODO: Currently too fast -> need to add a delay between keypresses
-
-        # pressed = pg.key.get_pressed()
-        #
-        # if pressed[pg.K_UP]:
-        #     self.viewers[0].pan('up')
-        # elif pressed[pg.K_DOWN]:
-        #     self.viewers[0].pan('down')
-        # elif pressed[pg.K_LEFT]:
-        #     self.viewers[0].pan('left')
-        # elif pressed[pg.K_RIGHT]:
-        #     self.viewers[0].pan('right')
+                elif event.key == pg.K_KP_ENTER or event.key == pg.K_RETURN:
+                    self.viewers[0].zoom('center')
+                elif event.key == pg.K_KP_PLUS:
+                    self.viewers[0].zoom('in')
+                elif event.key == pg.K_KP_MINUS:
+                    self.viewers[0].zoom('out')
 
     def start(self):
         """
@@ -100,6 +94,7 @@ class StackBrowser:
 
         :rtype: None
         """
+        pg.key.set_repeat(400, 50)
         while True:
             self._handle_events(pg.event.get())
             pg.display.flip()
