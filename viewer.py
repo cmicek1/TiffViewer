@@ -30,6 +30,7 @@ class Viewer:
         self.stack = stack
         self.curr_w, self.curr_h = 0, 0
         self.current_slice = 0
+        self._scale = 1
         pg.init()
         # Use optimal starting size
         sz_to_use = tuple([self.stack.imarray.shape[1], self.stack.imarray.shape[2]])
@@ -97,7 +98,12 @@ class Viewer:
         (old_w, old_h) = self.screen.get_size()
         self.screen = pg.display.set_mode(size, pg.RESIZABLE, BIT_DEPTH)
         pg.display.set_caption(cap[0])
-        self.curr_bg = pg.transform.scale(self.orig_bg, size)
+
+        if self._scale != 1:
+            size2 = (int(size[0] * self._scale), int(size[1] * self._scale))
+        else:
+            size2 = size
+        self.curr_bg = pg.transform.scale(self.orig_bg, size2)
 
         self.screen.fill(GRAY)
 
@@ -156,25 +162,38 @@ class Viewer:
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
 
     def zoom(self, direction):
+        """
+        Zooms the current image about the position of the mouse cursor.
+
+        :param direction: The direction to zoom. 'Center' returns the image
+        to a scale of 1 centered about the window center.
+
+        :type direction: str in ['center', 'in', 'out']
+
+        :rtype: None
+        """
         to_zoom = pg.mouse.get_pos()
         size = self.curr_bg.get_size()
         if direction == 'center':
             self.curr_w, self.curr_h = 0, 0
+            self._scale = 1
             self.view_slice(self.curr_bg, self.current_slice,
                             self.screen.get_size())
 
         elif direction == 'in':
             self.curr_bg = pg.transform.scale(
                 self.orig_bg, tuple(int(_ * ZOOM_FACTOR) for _ in size))
-            self.curr_w -= (to_zoom[0] * ZOOM_FACTOR - self.screen.get_size()[0] / 2)
-            self.curr_h -= (to_zoom[1] * ZOOM_FACTOR - self.screen.get_size()[1] / 2)
+            self.curr_w -= to_zoom[0] * (self._scale * ZOOM_FACTOR) - to_zoom[0] * self._scale
+            self.curr_h -= to_zoom[1] * (self._scale * ZOOM_FACTOR) - to_zoom[1] * self._scale
+            self._scale *= ZOOM_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
 
         elif direction == 'out':
             self.curr_bg = pg.transform.scale(
                 self.orig_bg, tuple(int(_ / ZOOM_FACTOR) for _ in size))
-            self.curr_w -= (to_zoom[0] / ZOOM_FACTOR - self.screen.get_size()[0] / 2)
-            self.curr_h -= (to_zoom[1] / ZOOM_FACTOR - self.screen.get_size()[1] / 2)
+            self.curr_w -= to_zoom[0] * (self._scale / ZOOM_FACTOR) - to_zoom[0] * self._scale
+            self.curr_h -= to_zoom[1] * (self._scale / ZOOM_FACTOR) - to_zoom[1] * self._scale
+            self._scale /= ZOOM_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
