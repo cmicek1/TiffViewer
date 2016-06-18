@@ -29,6 +29,7 @@ class Viewer:
         """
         self.stack = stack
         self.curr_w, self.curr_h = 0, 0
+        self._pan_w, self._pan_h = 0, 0
         self.current_slice = 0
         self._scale = 1
         pg.init()
@@ -143,21 +144,25 @@ class Viewer:
         """
         if direction == 'up':
             self.curr_h += self.screen.get_size()[1] / PAN_FACTOR
+            self._pan_h += self.screen.get_size()[1] / PAN_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
 
         elif direction == 'down':
             self.curr_h -= self.screen.get_size()[1] / PAN_FACTOR
+            self._pan_h -= self.screen.get_size()[1] / PAN_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
 
         elif direction == 'left':
             self.curr_w += self.screen.get_size()[1] / PAN_FACTOR
+            self._pan_w += self.screen.get_size()[1] / PAN_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
 
         elif direction == 'right':
             self.curr_w -= self.screen.get_size()[1] / PAN_FACTOR
+            self._pan_w -= self.screen.get_size()[1] / PAN_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
 
@@ -176,15 +181,20 @@ class Viewer:
         size = self.curr_bg.get_size()
         if direction == 'center':
             self.curr_w, self.curr_h = 0, 0
+            self._pan_w, self._pan_h = 0, 0
             self._scale = 1
             self.view_slice(self.curr_bg, self.current_slice,
                             self.screen.get_size())
 
+        # TODO: Fix zoom after pan
+
         elif direction == 'in':
             self.curr_bg = pg.transform.scale(
                 self.orig_bg, tuple(int(_ * ZOOM_FACTOR) for _ in size))
-            self.curr_w -= to_zoom[0] * (self._scale * ZOOM_FACTOR) - to_zoom[0] * self._scale
-            self.curr_h -= to_zoom[1] * (self._scale * ZOOM_FACTOR) - to_zoom[1] * self._scale
+            self.curr_w -= to_zoom[0] * (self._scale * ZOOM_FACTOR) - to_zoom[0] * self._scale\
+                           - self._pan_w / ZOOM_FACTOR
+            self.curr_h -= to_zoom[1] * (self._scale * ZOOM_FACTOR) - to_zoom[1] * self._scale\
+                           - self._pan_h / ZOOM_FACTOR
             self._scale *= ZOOM_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
@@ -192,8 +202,10 @@ class Viewer:
         elif direction == 'out':
             self.curr_bg = pg.transform.scale(
                 self.orig_bg, tuple(int(_ / ZOOM_FACTOR) for _ in size))
-            self.curr_w -= to_zoom[0] * (self._scale / ZOOM_FACTOR) - to_zoom[0] * self._scale
-            self.curr_h -= to_zoom[1] * (self._scale / ZOOM_FACTOR) - to_zoom[1] * self._scale
+            self.curr_w -= to_zoom[0] * (self._scale / ZOOM_FACTOR) - to_zoom[0] * self._scale\
+                           + self._pan_w / ZOOM_FACTOR
+            self.curr_h -= to_zoom[1] * (self._scale / ZOOM_FACTOR) - to_zoom[1] * self._scale\
+                           + self._pan_h / ZOOM_FACTOR
             self._scale /= ZOOM_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
