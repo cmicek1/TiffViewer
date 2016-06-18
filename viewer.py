@@ -59,9 +59,12 @@ class Viewer:
 
         :param background: The Surface of the current image.
         :param z: The depth of the image to view.
+        :param size: Tuple of size (w, h) to scale image to (used if resizing a zoomed
+                     image)
 
         :type background: pygame.Surface
         :type z: int
+        :type size: tuple(int, int)
 
         :rtype: None
         """
@@ -192,9 +195,9 @@ class Viewer:
             self.curr_bg = pg.transform.scale(
                 self.orig_bg, tuple(int(_ * ZOOM_FACTOR) for _ in size))
             self.curr_w -= to_zoom[0] * (self._scale * ZOOM_FACTOR) - to_zoom[0] * self._scale\
-                           - self._pan_w / ZOOM_FACTOR
+                - self._pan_w / ZOOM_FACTOR
             self.curr_h -= to_zoom[1] * (self._scale * ZOOM_FACTOR) - to_zoom[1] * self._scale\
-                           - self._pan_h / ZOOM_FACTOR
+                - self._pan_h / ZOOM_FACTOR
             self._scale *= ZOOM_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
@@ -203,9 +206,9 @@ class Viewer:
             self.curr_bg = pg.transform.scale(
                 self.orig_bg, tuple(int(_ / ZOOM_FACTOR) for _ in size))
             self.curr_w -= to_zoom[0] * (self._scale / ZOOM_FACTOR) - to_zoom[0] * self._scale\
-                           + self._pan_w / ZOOM_FACTOR
+                + self._pan_w / ZOOM_FACTOR
             self.curr_h -= to_zoom[1] * (self._scale / ZOOM_FACTOR) - to_zoom[1] * self._scale\
-                           + self._pan_h / ZOOM_FACTOR
+                + self._pan_h / ZOOM_FACTOR
             self._scale /= ZOOM_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
