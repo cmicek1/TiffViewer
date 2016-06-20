@@ -17,16 +17,14 @@ class StackBrowser:
         """
         Create the stack browser by picking a file to load.
         """
-        # self.open_stacks = []
         self.viewers = []  # if at some point we port to another library
 
         root = Tk.Tk()
         root.withdraw()
         fpath = tkFileDialog.askopenfilename(
-            initialdir=os.path.expanduser('~/Desktop/test'))
+            initialdir=os.path.expanduser('~/Desktop'))
         t = ts.TiffStack(fpath)
         v = viewer.Viewer(t)
-        # self.open_stacks.append(t)
         self.viewers.append(v)
 
     def _handle_events(self, events):
@@ -72,6 +70,7 @@ class StackBrowser:
                     self.viewers[0].scroll('down')
 
             elif event.type == pg.KEYDOWN:
+                # Check for pan
                 if event.key == pg.K_UP:
                     self.viewers[0].pan('up')
                 elif event.key == pg.K_DOWN:
@@ -81,12 +80,18 @@ class StackBrowser:
                 elif event.key == pg.K_RIGHT:
                     self.viewers[0].pan('right')
 
+                # Check for zoom
                 elif event.key == pg.K_KP_ENTER or event.key == pg.K_RETURN:
                     self.viewers[0].zoom('center')
                 elif event.key == pg.K_KP_PLUS:
                     self.viewers[0].zoom('in')
                 elif event.key == pg.K_KP_MINUS:
                     self.viewers[0].zoom('out')
+
+                elif event.key == pg.K_RIGHT and pg.key.get_mods() & pg.KMOD_SHIFT:
+                    self.viewers[0].newtp('next')
+                elif event.key == pg.K_LEFT and pg.key.get_mods() & pg.KMOD_SHIFT:
+                    self.viewers[0].newtp('prev')
 
     def start(self):
         """

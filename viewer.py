@@ -1,3 +1,5 @@
+import os
+import tiffstack as ts
 import pygame as pg
 
 BIT_DEPTH = 8
@@ -27,6 +29,7 @@ class Viewer:
         :type stack: tiffstack.TiffStack
         :type caption: str
         """
+        self.open_stacks = []
         self.stack = stack
         self.curr_w, self.curr_h = 0, 0
         self.current_slice = 0
@@ -45,16 +48,13 @@ class Viewer:
         # resize operations
         self.curr_bg = self.orig_bg
         self.view_slice(self.orig_bg, self.current_slice)
+        self.open_stacks.append(self.stack)
         pg.display.flip()
 
     def view_slice(self, background, z, size=None):
         """
         Update the view of 'background' to display
         the image at depth 'z'.
-
-        NOTE: This is currently the slowest part of the program, taking
-        about ~0.3 seconds. Will try to optimize before adding more
-        functionality.
 
         :param background: The Surface of the current image.
         :param z: The depth of the image to view.
@@ -200,3 +200,58 @@ class Viewer:
             self._scale /= ZOOM_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
+
+    def newtp(self, direction):
+        """
+        NOTE: Not yet tested.
+
+        View either the previous or the next time point,
+        if it exists.
+        :param direction: The direction to look, either next
+                          or prev.
+
+        :type direction: str in ['next', 'prev']
+
+        :rtype: None
+        """
+        dirpath = os.path.dirname(self.stack.directory)
+        flist = os.listdir(dirpath)
+        curr_index = flist.index(os.path.basename(self.stack.directory))
+        fname = None
+        try:
+            if direction == 'next':
+                if curr_index < len(flist) - 3:
+                    fname = flist[curr_index + 2]
+                else:
+                    raise StackOutOfBoundsException(
+                        "No future time point (end of hyperstack)"
+                    )
+            elif direction == 'prev':
+                if curr_index > 1:
+                    fname = flist[curr_index - 2]
+                else:
+                    raise StackOutOfBoundsException(
+                        "No previous time point (beginning of hyperstack)"
+                    )
+        except StackOutOfBoundsException as e:
+            print e.args[0]
+        if fname is not None:
+            for stack in self.open_stacks:
+                if stack.fname == fname:
+                    self.stack = stack
+            if self.stack.fname != fname:
+                self.stack = ts.TiffStack(dirpath + '/' + fname)
+            self.curr_w, self.curr_h = 0, 0
+            self.current_slice = 0
+            self._scale = 1
+            self.curr_bg = self.orig_bg
+            self.view_slice(self.curr_bg, self.current_slice)
+            self.open_stacks.append(self.stack)
+
+
+class StackOutOfBoundsException(Exception):
+    """
+    Extension of Exception to indicate attempts to
+    access time points out of range.
+    """
+    pass
