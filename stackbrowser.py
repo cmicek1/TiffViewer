@@ -70,8 +70,14 @@ class StackBrowser:
                     self.viewers[0].scroll('down')
 
             elif event.type == pg.KEYDOWN:
+                # Check for time point shift
+                if event.key == pg.K_RIGHT and (pg.key.get_mods() & pg.KMOD_SHIFT):
+                    self.viewers[0].newtp('next')
+                elif event.key == pg.K_LEFT and (pg.key.get_mods() & pg.KMOD_SHIFT):
+                    self.viewers[0].newtp('prev')
+
                 # Check for pan
-                if event.key == pg.K_UP:
+                elif event.key == pg.K_UP:
                     self.viewers[0].pan('up')
                 elif event.key == pg.K_DOWN:
                     self.viewers[0].pan('down')
@@ -87,11 +93,6 @@ class StackBrowser:
                     self.viewers[0].zoom('in')
                 elif event.key == pg.K_KP_MINUS:
                     self.viewers[0].zoom('out')
-
-                elif event.key == pg.K_RIGHT and pg.key.get_mods() & pg.KMOD_SHIFT:
-                    self.viewers[0].newtp('next')
-                elif event.key == pg.K_LEFT and pg.key.get_mods() & pg.KMOD_SHIFT:
-                    self.viewers[0].newtp('prev')
 
     def start(self):
         """

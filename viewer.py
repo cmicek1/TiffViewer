@@ -203,10 +203,16 @@ class Viewer:
 
     def newtp(self, direction):
         """
-        NOTE: Not yet tested.
-
         View either the previous or the next time point,
         if it exists.
+
+        NOTE: Expects a working directory of only vascular
+        stack TIFFs, alternating between channels 1 and 2,
+        named as follows:
+
+        Xyyyymmdd_aANUMALNUMBER_HYPERSTACKNUMBER_chCHANNELNUMBER.tif
+        ex: X20140516_a153_hs3_ch2.tif
+
         :param direction: The direction to look, either next
                           or prev.
 

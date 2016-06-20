@@ -19,7 +19,7 @@ class TiffStack:
         """
         self.directory = directory
         self.fname = os.path.basename(self.directory)
-        _ = fname.split('_')
+        _ = self.fname.split('_')
         self.date, self.animal, self.stacknum, self.channel =\
             _[0], _[1], int(_[2]), _[3].split('.')[0]
         self.image = tf.TiffFile(self.directory)
