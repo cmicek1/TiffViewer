@@ -2,6 +2,7 @@ import os
 import tiffstack as ts
 import pygame as pg
 
+GREEN_PALETTE = []
 BIT_DEPTH = 8
 GRAY = (150, 150, 150)
 PAN_FACTOR = 20
@@ -29,6 +30,7 @@ class Viewer:
         :type stack: tiffstack.TiffStack
         :type caption: str
         """
+        make_green()
         self.open_stacks = []
         self.stack = stack
         self.curr_w, self.curr_h = 0, 0
@@ -40,6 +42,7 @@ class Viewer:
         self.screen = pg.display.set_mode(sz_to_use, pg.RESIZABLE,
                                           BIT_DEPTH)
         pg.display.set_caption(caption)
+        pg.display.set_palette(GREEN_PALETTE)
 
         # Create initial background surface
         self.orig_bg = pg.Surface(self.screen.get_size())
@@ -65,7 +68,7 @@ class Viewer:
         :type z: int
         :type size: tuple(int, int)
 
-        :rtype: None
+        :return: None
         """
         if size is None:
             size = background.get_size()
@@ -95,12 +98,13 @@ class Viewer:
 
         :type size: tuple(int, int)
 
-        :rtype: None
+        :return: None
         """
         cap = pg.display.get_caption()
         (old_w, old_h) = self.screen.get_size()
         self.screen = pg.display.set_mode(size, pg.RESIZABLE, BIT_DEPTH)
         pg.display.set_caption(cap[0])
+        pg.display.set_palette(GREEN_PALETTE)
 
         if self._scale != 1:
             size2 = (int(size[0] * self._scale), int(size[1] * self._scale))
@@ -124,7 +128,7 @@ class Viewer:
 
         :type direction: str in ['up', 'down']
 
-        :rtype: None
+        :return: None
         """
         if direction == 'up' and self.current_slice > 0:
             self.current_slice -= 1
@@ -142,7 +146,7 @@ class Viewer:
 
         :type direction: str in ['up', 'down', 'left', 'right']
 
-        :rtype: None
+        :return: None
         """
         if direction == 'up':
             self.curr_h += self.screen.get_size()[1] / PAN_FACTOR
@@ -173,7 +177,7 @@ class Viewer:
 
         :type direction: str in ['center', 'in', 'out']
 
-        :rtype: None
+        :return: None
         """
         to_zoom = pg.mouse.get_pos()
         size = self.curr_bg.get_size()
@@ -221,7 +225,7 @@ class Viewer:
 
         :type direction: str in ['next', 'prev']
 
-        :rtype: None
+        :return: None
         """
         dirpath = os.path.dirname(self.stack.directory)
         flist = os.listdir(dirpath)
@@ -274,3 +278,14 @@ class StackOutOfBoundsException(Exception):
     access time points out of range.
     """
     pass
+
+
+def make_green():
+    """
+    Setter for global GREEN_PALETTE, which is a green color palette
+    for the display.
+    :return: None
+    """
+    global GREEN_PALETTE
+    for i in range(256):
+        GREEN_PALETTE.append((0, i, 0))

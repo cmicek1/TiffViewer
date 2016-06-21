@@ -35,7 +35,7 @@ class StackBrowser:
 
         :type events: pygame.event.Event[]
 
-        :rtype: None
+        :return: None
         """
         for event in events:
             # TODO: Make this less bulky
@@ -109,7 +109,7 @@ class StackBrowser:
         """
         Main event loop; handle all events and then update the display.
 
-        :rtype: None
+        :return: None
         """
         pg.key.set_repeat(400, 50)
         while True:
