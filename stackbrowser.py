@@ -38,6 +38,8 @@ class StackBrowser:
         :rtype: None
         """
         for event in events:
+            # TODO: Make this less bulky
+
             # Check for exit:
             if event.type == pg.QUIT:
                 pg.quit()
@@ -70,11 +72,12 @@ class StackBrowser:
                     self.viewers[0].scroll('down')
 
             elif event.type == pg.KEYDOWN:
-                # Check for time point shift
+                # Check for time point shift (done first because
+                # check removes event from queue)
                 if event.key == pg.K_RIGHT and (pg.key.get_mods() & pg.KMOD_SHIFT):
-                    self.viewers[0].newtp('next')
+                    self.viewers[0].change_view('next')
                 elif event.key == pg.K_LEFT and (pg.key.get_mods() & pg.KMOD_SHIFT):
-                    self.viewers[0].newtp('prev')
+                    self.viewers[0].change_view('prev')
 
                 # Check for pan
                 elif event.key == pg.K_UP:
@@ -93,6 +96,14 @@ class StackBrowser:
                     self.viewers[0].zoom('in')
                 elif event.key == pg.K_KP_MINUS:
                     self.viewers[0].zoom('out')
+
+                # Check for channel change
+                elif event.key == pg.K_1 and (
+                        self.viewers[0].stack.channel == 'ch2'):
+                    self.viewers[0].change_view('1')
+                elif event.key == pg.K_2 and (
+                        self.viewers[0].stack.channel == 'ch1'):
+                    self.viewers[0].change_view('2')
 
     def start(self):
         """

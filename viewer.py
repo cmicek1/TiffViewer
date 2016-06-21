@@ -201,16 +201,19 @@ class Viewer:
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
 
-    def newtp(self, direction):
+    def change_view(self, direction):
         """
+        Change the file seen in the current viewer.
+
         View either the previous or the next time point,
-        if it exists.
+        if it exists, or switch between channels 1 and
+        2.
 
         NOTE: Expects a working directory of only vascular
         stack TIFFs, alternating between channels 1 and 2,
         named as follows:
 
-        Xyyyymmdd_aANUMALNUMBER_HYPERSTACKNUMBER_chCHANNELNUMBER.tif
+        Xyyyymmdd_aANUMALNUMBER_hsHYPERSTACKNUMBER_chCHANNELNUMBER.tif
         ex: X20140516_a153_hs3_ch2.tif
 
         :param direction: The direction to look, either next
@@ -225,6 +228,7 @@ class Viewer:
         curr_index = flist.index(os.path.basename(self.stack.directory))
         fname = None
         try:
+            # Deal with time point change
             if direction == 'next':
                 if curr_index < len(flist) - 3:
                     fname = flist[curr_index + 2]
@@ -239,8 +243,16 @@ class Viewer:
                     raise StackOutOfBoundsException(
                         "No previous time point (beginning of hyperstack)"
                     )
+
+            # Deal with channel change
+            elif direction == '1':
+                fname = flist[curr_index - 1]
+            elif direction == '2':
+                fname = flist[curr_index + 1]
+
         except StackOutOfBoundsException as e:
             print e.args[0]
+
         if fname is not None:
             for stack in self.open_stacks:
                 if stack.fname == fname:
@@ -248,7 +260,8 @@ class Viewer:
             if self.stack.fname != fname:
                 self.stack = ts.TiffStack(dirpath + '/' + fname)
             self.curr_w, self.curr_h = 0, 0
-            self.current_slice = 0
+            if direction == 'next' or direction == 'prev':
+                self.current_slice = 0
             self._scale = 1
             self.curr_bg = self.orig_bg
             self.view_slice(self.curr_bg, self.current_slice)
