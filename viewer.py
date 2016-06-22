@@ -3,6 +3,7 @@ import tiffstack as ts
 import pygame as pg
 
 GREEN_PALETTE = []
+RED_PALETTE = []
 BIT_DEPTH = 8
 GRAY = (150, 150, 150)
 PAN_FACTOR = 20
@@ -30,7 +31,7 @@ class Viewer:
         :type stack: tiffstack.TiffStack
         :type caption: str
         """
-        make_green()
+        make_colors()
         self.open_stacks = []
         self.stack = stack
         self.curr_w, self.curr_h = 0, 0
@@ -42,11 +43,12 @@ class Viewer:
         self.screen = pg.display.set_mode(sz_to_use, pg.RESIZABLE,
                                           BIT_DEPTH)
         pg.display.set_caption(caption)
-        pg.display.set_palette(GREEN_PALETTE)
+        self.screen.set_palette(GREEN_PALETTE)
 
         # Create initial background surface
         self.orig_bg = pg.Surface(self.screen.get_size())
         self.orig_bg = self.orig_bg.convert()
+
         # Now make a copy - this is what will be altered for zoom/
         # resize operations
         self.curr_bg = self.orig_bg
@@ -104,7 +106,7 @@ class Viewer:
         (old_w, old_h) = self.screen.get_size()
         self.screen = pg.display.set_mode(size, pg.RESIZABLE, BIT_DEPTH)
         pg.display.set_caption(cap[0])
-        pg.display.set_palette(GREEN_PALETTE)
+        self.screen.set_palette(GREEN_PALETTE)
 
         if self._scale != 1:
             size2 = (int(size[0] * self._scale), int(size[1] * self._scale))
@@ -150,6 +152,9 @@ class Viewer:
         """
         if direction == 'up':
             self.curr_h += self.screen.get_size()[1] / PAN_FACTOR
+            # TODO: Play around with Rectangles
+
+            # s = self.screen.subsurface(pg.Rect())
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
 
@@ -280,12 +285,14 @@ class StackOutOfBoundsException(Exception):
     pass
 
 
-def make_green():
+def make_colors():
     """
-    Setter for global GREEN_PALETTE, which is a green color palette
+    Setter for globals x_PALETTE, which are color palettes
     for the display.
     :return: None
     """
     global GREEN_PALETTE
+    global RED_PALETTE
     for i in range(256):
         GREEN_PALETTE.append((0, i, 0))
+        RED_PALETTE.append((i, 0, 0))
