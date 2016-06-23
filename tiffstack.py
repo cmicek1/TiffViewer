@@ -1,5 +1,7 @@
 import os
 import tifffile as tf
+import pandas as pd
+import nodedb as nd
 
 
 class TiffStack:
@@ -24,6 +26,8 @@ class TiffStack:
             _[0], _[1], int(_[2]), _[3].split('.')[0])
         self.image = tf.TiffFile(self.directory)
         self.imarray = self.image.asarray()
+        self.node_db = nd.NodeDb(
+            pd.read_csv(self.directory.split('ch')[0] + 'nT.txt'))
 
     @property
     def maxz(self):
