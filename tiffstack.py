@@ -3,6 +3,11 @@ import tifffile as tf
 import pandas as pd
 import nodedb as nd
 
+# Scaling factor to go from um data to pixels for rendering
+# (number below is in um/pixel).
+DX = 0.216
+DY = 0.216
+
 
 class TiffStack:
     """
@@ -27,7 +32,7 @@ class TiffStack:
         self.image = tf.TiffFile(self.directory)
         self.imarray = self.image.asarray()
         self.node_db = nd.NodeDb(
-            pd.read_csv(self.directory.split('ch')[0] + 'nT.txt'))
+            pd.read_csv(self.directory.split('ch')[0] + 'nT.txt'), DX, DY)
 
     @property
     def maxz(self):

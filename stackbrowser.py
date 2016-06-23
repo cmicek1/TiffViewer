@@ -22,7 +22,7 @@ class StackBrowser:
         root = Tk.Tk()
         root.withdraw()
         fpath = tkFileDialog.askopenfilename(
-            initialdir=os.path.expanduser('~/Desktop/test'))
+            initialdir=os.path.expanduser('~/Desktop/Vascular-Data'))
         t = ts.TiffStack(fpath)
         v = viewer.Viewer(t)
         self.viewers.append(v)

@@ -50,6 +50,9 @@ class Viewer:
         self.orig_bg = pg.Surface(self.screen.get_size())
         self.orig_bg = self.orig_bg.convert()
 
+        # TODO: Fix colors
+        pg.draw.circle(self.orig_bg, (190, 0, 0), (500, 500), 40)
+
         # Now make a copy - this is what will be altered for zoom/
         # resize operations
         self.curr_bg = self.orig_bg
@@ -82,12 +85,10 @@ class Viewer:
         if imarray.shape != background.get_size():
             pg.surfarray.blit_array(self.orig_bg, imarray)
             self.curr_bg = pg.transform.scale(self.orig_bg, size)
-            self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
         else:
             pg.surfarray.blit_array(background, imarray)
             self.orig_bg = background
-            self.screen.fill(GRAY)
             self.screen.blit(background, (self.curr_w, self.curr_h))
 
         self.current_slice = z
