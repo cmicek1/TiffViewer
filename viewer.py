@@ -1,10 +1,9 @@
 import os
 import tiffstack as ts
 import pygame as pg
+import numpy as np
 
-GREEN_PALETTE = []
-RED_PALETTE = []
-BIT_DEPTH = 8
+BIT_DEPTH = 32
 GRAY = (150, 150, 150)
 PAN_FACTOR = 20
 ZOOM_FACTOR = 1.5
@@ -31,27 +30,22 @@ class Viewer:
         :type stack: tiffstack.TiffStack
         :type caption: str
         """
-        make_colors()
         self.open_stacks = []
         self.stack = stack
         self.curr_w, self.curr_h = 0, 0
         self.current_slice = 0
         self._scale = 1
-        self._curr_palette = GREEN_PALETTE
+        self.curr_channel = 'green'
         pg.init()
         # Use optimal starting size
         sz_to_use = tuple([self.stack.imarray.shape[1], self.stack.imarray.shape[2]])
         self.screen = pg.display.set_mode(sz_to_use, pg.RESIZABLE,
                                           BIT_DEPTH)
         pg.display.set_caption(caption)
-        self.screen.set_palette(self._curr_palette)
 
         # Create initial background surface
         self.orig_bg = pg.Surface(self.screen.get_size())
         self.orig_bg = self.orig_bg.convert()
-
-        # TODO: Fix colors
-        pg.draw.circle(self.orig_bg, (190, 0, 0), (500, 500), 40)
 
         # Now make a copy - this is what will be altered for zoom/
         # resize operations
@@ -78,7 +72,17 @@ class Viewer:
         """
         if size is None:
             size = background.get_size()
-        imarray = self.stack.imarray[z]
+
+        # 32-bit color conversion. Most memory-efficient solution
+        # to dealing with pygame's color palettes, but slow when zoomed
+        # a lot.
+
+        # TODO: Optimize - only blit portion of array in view
+        #       (potentially large rewrite)
+        if self.curr_channel == 'green':
+            imarray = np.left_shift(np.uint32(self.stack.imarray[z]), 8)
+        elif self.curr_channel == 'red':
+            imarray = np.left_shift(np.uint32(self.stack.imarray[z]), 16)
 
         # Check if window has been resized. If so, resize
         # next image to current window size.
@@ -108,7 +112,6 @@ class Viewer:
         (old_w, old_h) = self.screen.get_size()
         self.screen = pg.display.set_mode(size, pg.RESIZABLE, BIT_DEPTH)
         pg.display.set_caption(cap[0])
-        self.screen.set_palette(self._curr_palette)
 
         if self._scale != 1:
             size2 = (int(size[0] * self._scale), int(size[1] * self._scale))
@@ -154,10 +157,7 @@ class Viewer:
         """
         if direction == 'up':
             self.curr_h += self.screen.get_size()[1] / PAN_FACTOR
-            # TODO: Play around with Rectangles
-
             self.screen.fill(GRAY)
-
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
 
         elif direction == 'down':
@@ -238,7 +238,6 @@ class Viewer:
         flist = os.listdir(dirpath)
         curr_index = flist.index(os.path.basename(self.stack.directory))
         fname = None
-        new_palette = None
         try:
             # Deal with time point change
             if direction == 'next':
@@ -258,10 +257,10 @@ class Viewer:
 
             # Deal with channel change
             elif direction == '1':
-                new_palette = GREEN_PALETTE
+                self.curr_channel = 'green'
                 fname = flist[curr_index - 1]
             elif direction == '2':
-                new_palette = RED_PALETTE
+                self.curr_channel = 'red'
                 fname = flist[curr_index + 1]
 
         except StackOutOfBoundsException as e:
@@ -278,11 +277,6 @@ class Viewer:
                 self.current_slice = 0
             self._scale = 1
             self.curr_bg = self.orig_bg
-            if new_palette is not None:
-                self._curr_palette = new_palette
-                self.screen.set_palette(self._curr_palette)
-                self.orig_bg.set_palette(self._curr_palette)
-                self.curr_bg.set_palette(self._curr_palette)
             self.view_slice(self.curr_bg, self.current_slice)
             self.open_stacks.append(self.stack)
 
@@ -293,26 +287,3 @@ class StackOutOfBoundsException(Exception):
     access time points out of range.
     """
     pass
-
-
-def make_colors():
-    """
-    Setter for globals x_PALETTE, which are color palettes
-    for the display.
-    :return: None
-    """
-    global GREEN_PALETTE
-    global RED_PALETTE
-    for i in range(256):
-        # GREEN_PALETTE.append((0, i, 0))
-        # RED_PALETTE.append((i, 0, 0))
-
-        # TODO: Fix this (at some point)
-        if i != GRAY[0]:
-            GREEN_PALETTE.append((0, i, 0))
-            RED_PALETTE.append((i, 0, 0))
-        else:
-            # This is a bit of a hack, but I couldn't find a way
-            # to update the palette of a portion of a surface.
-            GREEN_PALETTE.append(GRAY)
-            RED_PALETTE.append(GRAY)
