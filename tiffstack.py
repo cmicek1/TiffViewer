@@ -3,6 +3,7 @@ import tifffile as tf
 import pandas as pd
 import nodedb as nd
 
+
 # Scaling factor to go from um data to pixels for rendering
 # (number below is in um/pixel).
 DX = 0.216

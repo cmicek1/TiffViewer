@@ -7,6 +7,7 @@ BIT_DEPTH = 32
 GRAY = (150, 150, 150)
 PAN_FACTOR = 20
 ZOOM_FACTOR = 1.5
+DRAW_OFFSET = 1
 
 
 class Viewer:
@@ -34,7 +35,7 @@ class Viewer:
         self.stack = stack
         self.curr_w, self.curr_h = 0, 0
         self.current_slice = 0
-        self._scale = 1
+        self.scale = 1
         self.curr_channel = 'green'
         pg.init()
         # Use optimal starting size
@@ -97,6 +98,8 @@ class Viewer:
 
         self.current_slice = z
 
+        self.stack.node_db.draw_nodes(self, DRAW_OFFSET)
+
     def resize(self, size):
         """
         Resizes the current image and window to the given size.
@@ -113,8 +116,8 @@ class Viewer:
         self.screen = pg.display.set_mode(size, pg.RESIZABLE, BIT_DEPTH)
         pg.display.set_caption(cap[0])
 
-        if self._scale != 1:
-            size2 = (int(size[0] * self._scale), int(size[1] * self._scale))
+        if self.scale != 1:
+            size2 = (int(size[0] * self.scale), int(size[1] * self.scale))
         else:
             size2 = size
         self.curr_bg = pg.transform.scale(self.orig_bg, size2)
@@ -125,6 +128,11 @@ class Viewer:
         self.curr_h = float(self.curr_h) / old_h * size[1]
 
         self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
+        self.stack.node_db.draw_nodes(self, DRAW_OFFSET,
+                                      (1.0 / self.orig_bg.get_size()[0] *
+                                       size[0]),
+                                      (1.0 / self.orig_bg.get_size()[1] *
+                                       size[1]))
 
     def scroll(self, direction):
         """
@@ -190,7 +198,7 @@ class Viewer:
         size = self.curr_bg.get_size()
         if direction == 'center':
             self.curr_w, self.curr_h = 0, 0
-            self._scale = 1
+            self.scale = 1
             self.view_slice(self.curr_bg, self.current_slice,
                             self.screen.get_size())
 
@@ -199,7 +207,7 @@ class Viewer:
                 self.orig_bg, tuple(int(_ * ZOOM_FACTOR) for _ in size))
             self.curr_w = self.curr_w * ZOOM_FACTOR - to_zoom[0] * (ZOOM_FACTOR - 1)
             self.curr_h = self.curr_h * ZOOM_FACTOR - to_zoom[1] * (ZOOM_FACTOR - 1)
-            self._scale *= ZOOM_FACTOR
+            self.scale *= ZOOM_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
 
@@ -208,7 +216,7 @@ class Viewer:
                 self.orig_bg, tuple(int(_ / ZOOM_FACTOR) for _ in size))
             self.curr_w = self.curr_w / ZOOM_FACTOR - to_zoom[0] * (1 / ZOOM_FACTOR - 1)
             self.curr_h = self.curr_h / ZOOM_FACTOR - to_zoom[1] * (1 / ZOOM_FACTOR - 1)
-            self._scale /= ZOOM_FACTOR
+            self.scale /= ZOOM_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
 
@@ -273,9 +281,7 @@ class Viewer:
             if self.stack.fname != fname:
                 self.stack = ts.TiffStack(dirpath + '/' + fname)
             self.curr_w, self.curr_h = 0, 0
-            if direction == 'next' or direction == 'prev':
-                self.current_slice = 0
-            self._scale = 1
+            self.scale = 1
             self.curr_bg = self.orig_bg
             self.view_slice(self.curr_bg, self.current_slice)
             self.open_stacks.append(self.stack)
