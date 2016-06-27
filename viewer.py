@@ -6,7 +6,10 @@ import numpy as np
 BIT_DEPTH = 32
 GRAY = (150, 150, 150)
 PAN_FACTOR = 20
+# Percentage to enlarge the view on zoom (float)
 ZOOM_FACTOR = 1.5
+
+# Number of slices +/- to draw graph attributes
 DRAW_OFFSET = 1
 
 
@@ -82,7 +85,8 @@ class Viewer:
         #       (potentially large rewrite)
         if self.curr_channel == 'green':
             imarray = np.left_shift(np.uint32(self.stack.imarray[z]), 8)
-        elif self.curr_channel == 'red':
+        else:
+            # self.curr_channel == 'red'
             imarray = np.left_shift(np.uint32(self.stack.imarray[z]), 16)
 
         # Check if window has been resized. If so, resize
@@ -91,14 +95,21 @@ class Viewer:
             pg.surfarray.blit_array(self.orig_bg, imarray)
             self.curr_bg = pg.transform.scale(self.orig_bg, size)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
+            self.current_slice = z
+            self.draw_nodes(DRAW_OFFSET, (1.0 / self.orig_bg.get_size()[0] *
+                            self.curr_bg.get_size()[0]),
+                            (1.0 / self.orig_bg.get_size()[1] *
+                            self.curr_bg.get_size()[1]),
+                            self.curr_w, self.curr_h)
+
         else:
             pg.surfarray.blit_array(background, imarray)
             self.orig_bg = background
             self.screen.blit(background, (self.curr_w, self.curr_h))
-
-        self.current_slice = z
-
-        self.stack.node_db.draw_nodes(self, DRAW_OFFSET)
+            self.current_slice = z
+            self.draw_nodes(DRAW_OFFSET,
+                            xtranslate=self.curr_w,
+                            ytranslate=self.curr_h)
 
     def resize(self, size):
         """
@@ -128,11 +139,11 @@ class Viewer:
         self.curr_h = float(self.curr_h) / old_h * size[1]
 
         self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
-        self.stack.node_db.draw_nodes(self, DRAW_OFFSET,
-                                      (1.0 / self.orig_bg.get_size()[0] *
-                                       size[0]),
-                                      (1.0 / self.orig_bg.get_size()[1] *
-                                       size[1]))
+        self.draw_nodes(DRAW_OFFSET, (1.0 / self.orig_bg.get_size()[0] *
+                        size[0]) * self.scale,
+                        (1.0 / self.orig_bg.get_size()[1] *
+                        size[1]) * self.scale,
+                        self.curr_w, self.curr_h)
 
     def scroll(self, direction):
         """
@@ -164,24 +175,60 @@ class Viewer:
         :return: None
         """
         if direction == 'up':
+            w = self.curr_w
+            h = self.curr_h
             self.curr_h += self.screen.get_size()[1] / PAN_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
+            self.draw_nodes(DRAW_OFFSET, (1.0 / self.orig_bg.get_size()[0] *
+                            self.curr_bg.get_size()[0]),
+                            (1.0 / self.orig_bg.get_size()[1] *
+                            self.curr_bg.get_size()[1]),
+                            xtranslate=w,
+                            ytranslate=
+                            h + self.screen.get_size()[1] / PAN_FACTOR)
 
         elif direction == 'down':
+            w = self.curr_w
+            h = self.curr_h
             self.curr_h -= self.screen.get_size()[1] / PAN_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
+            self.draw_nodes(DRAW_OFFSET,(1.0 / self.orig_bg.get_size()[0] *
+                            self.curr_bg.get_size()[0]),
+                            (1.0 / self.orig_bg.get_size()[1] *
+                            self.curr_bg.get_size()[1]),
+                            xtranslate=w,
+                            ytranslate=
+                            h - self.screen.get_size()[1] / PAN_FACTOR)
 
         elif direction == 'left':
-            self.curr_w += self.screen.get_size()[1] / PAN_FACTOR
+            w = self.curr_w
+            h = self.curr_h
+            self.curr_w += self.screen.get_size()[0] / PAN_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
+            self.draw_nodes(DRAW_OFFSET, (1.0 / self.orig_bg.get_size()[0] *
+                            self.curr_bg.get_size()[0]),
+                            (1.0 / self.orig_bg.get_size()[1] *
+                            self.curr_bg.get_size()[1]),
+                            xtranslate=
+                            w + self.screen.get_size()[0] / PAN_FACTOR,
+                            ytranslate=h)
 
         elif direction == 'right':
-            self.curr_w -= self.screen.get_size()[1] / PAN_FACTOR
+            w = self.curr_w
+            h = self.curr_h
+            self.curr_w -= self.screen.get_size()[0] / PAN_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
+            self.draw_nodes(DRAW_OFFSET, (1.0 / self.orig_bg.get_size()[0] *
+                            self.curr_bg.get_size()[0]),
+                            (1.0 / self.orig_bg.get_size()[1] *
+                            self.curr_bg.get_size()[1]),
+                            xtranslate=
+                            w - self.screen.get_size()[0] / PAN_FACTOR,
+                            ytranslate=h)
 
     def zoom(self, direction):
         """
@@ -210,6 +257,12 @@ class Viewer:
             self.scale *= ZOOM_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
+            self.draw_nodes(DRAW_OFFSET, (1.0 / self.orig_bg.get_size()[0] *
+                            self.curr_bg.get_size()[0]),
+                            (1.0 / self.orig_bg.get_size()[1] *
+                            self.curr_bg.get_size()[1]),
+                            xtranslate=self.curr_w,
+                            ytranslate=self.curr_h)
 
         elif direction == 'out':
             self.curr_bg = pg.transform.scale(
@@ -219,6 +272,12 @@ class Viewer:
             self.scale /= ZOOM_FACTOR
             self.screen.fill(GRAY)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
+            self.draw_nodes(DRAW_OFFSET, (1.0 / self.orig_bg.get_size()[0] *
+                            self.curr_bg.get_size()[0]),
+                            (1.0 / self.orig_bg.get_size()[1] *
+                            self.curr_bg.get_size()[1]),
+                            xtranslate=self.curr_w,
+                            ytranslate=self.curr_h)
 
     def change_view(self, direction):
         """
@@ -232,8 +291,8 @@ class Viewer:
         stack TIFFs, alternating between channels 1 and 2,
         named as follows:
 
-        Xyyyymmdd_aANUMALNUMBER_hsHYPERSTACKNUMBER_chCHANNELNUMBER.tif
-        ex: X20140516_a153_hs3_ch2.tif
+        Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_chCHANNELNUMBER.tif
+        ex: X20140516_a153_006_ch2.tif
 
         :param direction: The direction to look, either next
                           or prev.
@@ -285,6 +344,40 @@ class Viewer:
             self.curr_bg = self.orig_bg
             self.view_slice(self.curr_bg, self.current_slice)
             self.open_stacks.append(self.stack)
+
+    def draw_nodes(self, offset, xfactor=None, yfactor=None,
+                   xtranslate=None, ytranslate=None):
+
+        if xfactor is None:
+            xfactor = 1
+
+        if yfactor is None:
+            yfactor = 1
+
+        if xtranslate is None:
+            xtranslate = 0
+
+        if ytranslate is None:
+            ytranslate = 0
+
+        d1 = self.current_slice - offset
+        if d1 < 0:
+            d1 = 0
+
+        d2 = self.current_slice + offset
+        if d2 > self.stack.maxz:
+            d2 = self.stack.maxz
+        nodes = self.stack.node_db.dframe.loc[(d1 <= self.stack.node_db.dframe['z']) &
+                                (self.stack.node_db.dframe['z'] <= d2)]
+        for node in nodes.itertuples():
+            # Parameters hard-coded for now.
+            # TODO: Make these editable (separate class? interface later?)
+            pg.draw.circle(self.screen, (150, 0, 0),
+                           # Not a typo; x/y swapped in CSV file
+                           (int(node.y * xfactor / self.stack.dx +
+                                xtranslate),
+                            int(node.x * yfactor / self.stack.dy +
+                                ytranslate)), 5)
 
 
 class StackOutOfBoundsException(Exception):
