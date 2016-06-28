@@ -6,6 +6,7 @@ import numpy as np
 BIT_DEPTH = 32
 GRAY = (150, 150, 150)
 PAN_FACTOR = 20
+
 # Percentage to enlarge the view on zoom (float)
 ZOOM_FACTOR = 1.5
 
@@ -310,6 +311,10 @@ class Viewer:
             if direction == 'next':
                 if curr_index < len(flist) - 3:
                     fname = flist[curr_index + 2]
+                    if not fname.endswith('.tif'):
+                        raise StackOutOfBoundsException(
+                            "No future time point (end of hyperstack)"
+                        )
                 else:
                     raise StackOutOfBoundsException(
                         "No future time point (end of hyperstack)"
@@ -317,6 +322,10 @@ class Viewer:
             elif direction == 'prev':
                 if curr_index > 1:
                     fname = flist[curr_index - 2]
+                    if not fname.endswith('.tif'):
+                        raise StackOutOfBoundsException(
+                            "No previous time point (beginning of hyperstack)"
+                        )
                 else:
                     raise StackOutOfBoundsException(
                         "No previous time point (beginning of hyperstack)"
@@ -339,11 +348,9 @@ class Viewer:
                     self.stack = stack
             if self.stack.fname != fname:
                 self.stack = ts.TiffStack(dirpath + '/' + fname)
-            self.curr_w, self.curr_h = 0, 0
-            self.scale = 1
-            self.curr_bg = self.orig_bg
             self.view_slice(self.curr_bg, self.current_slice)
-            self.open_stacks.append(self.stack)
+            if self.stack not in self.open_stacks:
+                self.open_stacks.append(self.stack)
 
     def draw_nodes(self, offset, xfactor=None, yfactor=None,
                    xtranslate=None, ytranslate=None):
