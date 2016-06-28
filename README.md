@@ -34,7 +34,7 @@ At startup, you will need to choose a hyperstack to open. Please have a director
 * Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_ch2.tif
 * ...
 
-Then, select the stack to open (start w/ channel 1).
+Then, select the stack to open (start with channel 1).
 
 ### Controls
 
