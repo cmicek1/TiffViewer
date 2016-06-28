@@ -28,7 +28,7 @@ At startup, you will need to choose a hyperstack to open. Please have a director
   - Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_eT.txt
   - ...
 * __slabs/__
-  - Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_sT.txt
+  - Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_sD.txt
   - ...
 * Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_ch1.tif
 * Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_ch2.tif
