@@ -3,10 +3,12 @@ import tifffile as tf
 import pandas as pd
 import nodedb as nd
 import slabdb as sd
+import edgedb as ed
 
 
 NODE_DIR = 'nodes'
 SLAB_DIR = 'slabs'
+EDGE_DIR = 'edges'
 
 # Scaling factor to go from um data to pixels for rendering
 # (number below is in um/pixel).
@@ -43,8 +45,12 @@ class TiffStack:
         self._slab_dir = '{0}/{1}/{2}'.format(
             os.path.dirname(self.directory),
             SLAB_DIR, self.fname.split('ch')[0] + 'sD.txt')
+        self._edge_dir = '{0}/{1}/{2}'.format(
+            os.path.dirname(self.directory),
+            EDGE_DIR, self.fname.split('ch')[0] + 'eT.txt')
         self.node_db = nd.NodeDb(pd.read_csv(self._node_dir), DX, DY)
         self.slab_db = sd.SlabDb(pd.read_csv(self._slab_dir), DX, DY)
+        self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
 
     @property
     def maxz(self):

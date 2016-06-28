@@ -93,16 +93,15 @@ class Viewer:
         # Check if window has been resized. If so, resize
         # next image to current window size.
 
-        xfactor = float(self.curr_bg.get_size()[0]) / (
-            self.orig_bg.get_size()[0])
-        yfactor = float(self.curr_bg.get_size()[1]) / (
-            self.orig_bg.get_size()[1])
-
         if imarray.shape != background.get_size():
             pg.surfarray.blit_array(self.orig_bg, imarray)
             self.curr_bg = pg.transform.scale(self.orig_bg, size)
             self.screen.blit(self.curr_bg, (self.curr_w, self.curr_h))
             self.current_slice = z
+            xfactor = float(self.curr_bg.get_size()[0]) / (
+                self.orig_bg.get_size()[0])
+            yfactor = float(self.curr_bg.get_size()[1]) / (
+                self.orig_bg.get_size()[1])
             self.draw_nodes(DRAW_OFFSET, xfactor, yfactor,
                             self.curr_w, self.curr_h)
             self.draw_slabs(DRAW_OFFSET, xfactor, yfactor,
