@@ -46,3 +46,6 @@ __Zoom__ | +, -
 __Scroll__ | Mouse wheel
 __View channel [1, 2]__ | 1, 2
 __Next/previous time point__ | Shift + left, right
+
+
+For more info, see source documentation.
