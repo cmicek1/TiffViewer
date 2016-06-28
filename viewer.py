@@ -347,6 +347,38 @@ class Viewer:
 
     def draw_nodes(self, offset, xfactor=None, yfactor=None,
                    xtranslate=None, ytranslate=None):
+        """
+        Function to draw nodes from the current slice +/- offset
+        onto the current view. The exact position to draw depends on
+        the current state of the viewer (panned, zoomed, etc.);
+        the parameters below will vary for each call to the
+        methods above.
+
+        The position equation is as follows, with parameters for x and y
+        in place of pos:
+
+        int(pos * pos_factor / d_pos +  pos_translate)
+
+        NOTE: The output of the equation above will result in node position
+        in pixel coordinates with an origin at the top-left of the viewer.
+        Take this into account when considering positional data from the
+        node database.
+
+        :param offset: Number of slices +/- of nodes to also view,
+                       in addition to those from the current slice.
+        :param xfactor: pos_factor for x in the equation above
+        :param yfactor: pos factor for y in the equation above
+        :param xtranslate: translation constant for x in the equation above
+        :param ytranslate: translation constant fro y in the equation above
+
+        :type offset: int
+        :type xfactor: float, int
+        :type yfactor: float, int
+        :type xtranslate: float, int
+        :type ytranslate: float, int
+
+        :return: None
+        """
 
         if xfactor is None:
             xfactor = 1
@@ -360,10 +392,12 @@ class Viewer:
         if ytranslate is None:
             ytranslate = 0
 
+        # Min slice
         d1 = self.current_slice - offset
         if d1 < 0:
             d1 = 0
 
+        # Max slice
         d2 = self.current_slice + offset
         if d2 > self.stack.maxz:
             d2 = self.stack.maxz
