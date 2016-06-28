@@ -2,6 +2,7 @@ import os
 import tiffstack as ts
 import pygame as pg
 import numpy as np
+import pandas as pd
 
 BIT_DEPTH = 32
 GRAY = (150, 150, 150)
@@ -494,12 +495,27 @@ class Viewer:
         for slab in slabs.itertuples():
             # Parameters hard-coded for now.
             # TODO: Make these editable (separate class? interface later?)
+
+            # Not a typo; x/y swapped in CSV file
+            xpos = int(slab.y * xfactor / self.stack.dx +
+                       xtranslate)
+            ypos = int(slab.x * yfactor / self.stack.dy +
+                       ytranslate)
             pg.draw.circle(self.screen, (11, 255, 255),
-                           # Not a typo; x/y swapped in CSV file
-                           (int(slab.y * xfactor / self.stack.dx +
-                                xtranslate),
-                            int(slab.x * yfactor / self.stack.dy +
-                                ytranslate)), 4)
+                           (xpos, ypos), 4)
+
+            # Still buggy; also super slow
+            # if pd.notnull(slab.nextSlabIdx):
+            #     next_slab = self.stack.slab_db.dframe.loc[(
+            #         self.stack.slab_db.dframe['i'] ==
+            #         int(slab.nextSlabIdx))]
+            #     if next_slab.isin(slabs)['i'].all():
+            #         next_xpos = int(next_slab.y * xfactor / self.stack.dx +
+            #                         xtranslate)
+            #         next_ypos = int(next_slab.x * yfactor / self.stack.dy +
+            #                         ytranslate)
+            #         pg.draw.line(self.screen, (150, 0, 0),
+            #                     (xpos, ypos), (next_xpos, next_ypos))
 
 
 class StackOutOfBoundsException(Exception):
