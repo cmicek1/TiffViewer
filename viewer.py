@@ -493,6 +493,10 @@ class Viewer:
         slabs = self.stack.slab_db.dframe.loc[(d1 <= self.stack.slab_db.dframe['z']) &
                                               (self.stack.slab_db.dframe['z'] <= d2)]
         edge_segments = []
+        time = 0
+        prev_slab = None
+        prev_xpos = 0
+        prev_ypos = 0
         for slab in slabs.itertuples():
             # Parameters hard-coded for now.
             # TODO: Make these editable (separate class? interface later?)
@@ -505,28 +509,26 @@ class Viewer:
             pg.draw.circle(self.screen, (11, 255, 255),
                            (xpos, ypos), 4)
 
-            # Still buggy; also super slow
-            # edge_slabs = self.stack.slab_db.dframe.loc[(
-            #     self.stack.slab_db.dframe['edgeIdx'] ==
-            #     slab.edgeIdx)]
-            # xpos = None
-            # ypos = None
-            # for edge_slab in edge_slabs.itertuples():
-            #     if edge_slab not in edge_segments and (
-            #                 edge_slab.z in range(d1, d2)):
-            #         next_xpos = int(edge_slab.y * xfactor / self.stack.dx +
-            #                         xtranslate)
-            #         next_ypos = int(edge_slab.x * yfactor / self.stack.dy +
-            #                         ytranslate)
-            #         if xpos is None:
-            #             xpos = next_xpos
-            #             ypos = next_ypos
-            #             continue
-            #         pg.draw.line(self.screen, (150, 0, 0),
-            #                      (xpos, ypos), (next_xpos, next_ypos))
-            #         edge_segments.append(edge_slab)
-            #         xpos = next_xpos
-            #         ypos = next_ypos
+            if time == 0:
+                curr_edge = slab.edgeIdx
+                prev_slab = slab
+                prev_xpos = xpos
+                prev_ypos = ypos
+                time += 1
+            else:
+                if slab.edgeIdx == prev_slab.edgeIdx and (
+                        slab.i == prev_slab.i + 1):
+                    # Connect
+                    xpos = int(slab.y * xfactor / self.stack.dx +
+                               xtranslate)
+                    ypos = int(slab.x * yfactor / self.stack.dy +
+                               ytranslate)
+                    pg.draw.line(self.screen, (150, 0, 0),
+                                 (prev_xpos, prev_ypos), (xpos, ypos))
+                prev_slab = slab
+                prev_xpos = xpos
+                prev_ypos = ypos
+                time += 1
 
 
 class StackOutOfBoundsException(Exception):
