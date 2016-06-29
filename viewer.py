@@ -510,7 +510,6 @@ class Viewer:
                            (xpos, ypos), 4)
 
             if time == 0:
-                curr_edge = slab.edgeIdx
                 prev_slab = slab
                 prev_xpos = xpos
                 prev_ypos = ypos
