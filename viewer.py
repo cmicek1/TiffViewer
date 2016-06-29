@@ -492,6 +492,7 @@ class Viewer:
             d2 = self.stack.maxz
         slabs = self.stack.slab_db.dframe.loc[(d1 <= self.stack.slab_db.dframe['z']) &
                                               (self.stack.slab_db.dframe['z'] <= d2)]
+        edge_segments = []
         for slab in slabs.itertuples():
             # Parameters hard-coded for now.
             # TODO: Make these editable (separate class? interface later?)
@@ -505,17 +506,27 @@ class Viewer:
                            (xpos, ypos), 4)
 
             # Still buggy; also super slow
-            # if pd.notnull(slab.nextSlabIdx):
-            #     next_slab = self.stack.slab_db.dframe.loc[(
-            #         self.stack.slab_db.dframe['i'] ==
-            #         int(slab.nextSlabIdx))]
-            #     if next_slab.isin(slabs)['i'].all():
-            #         next_xpos = int(next_slab.y * xfactor / self.stack.dx +
+            # edge_slabs = self.stack.slab_db.dframe.loc[(
+            #     self.stack.slab_db.dframe['edgeIdx'] ==
+            #     slab.edgeIdx)]
+            # xpos = None
+            # ypos = None
+            # for edge_slab in edge_slabs.itertuples():
+            #     if edge_slab not in edge_segments and (
+            #                 edge_slab.z in range(d1, d2)):
+            #         next_xpos = int(edge_slab.y * xfactor / self.stack.dx +
             #                         xtranslate)
-            #         next_ypos = int(next_slab.x * yfactor / self.stack.dy +
+            #         next_ypos = int(edge_slab.x * yfactor / self.stack.dy +
             #                         ytranslate)
+            #         if xpos is None:
+            #             xpos = next_xpos
+            #             ypos = next_ypos
+            #             continue
             #         pg.draw.line(self.screen, (150, 0, 0),
-            #                     (xpos, ypos), (next_xpos, next_ypos))
+            #                      (xpos, ypos), (next_xpos, next_ypos))
+            #         edge_segments.append(edge_slab)
+            #         xpos = next_xpos
+            #         ypos = next_ypos
 
 
 class StackOutOfBoundsException(Exception):
