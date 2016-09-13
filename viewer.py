@@ -491,6 +491,11 @@ class Viewer:
             d2 = self.stack.maxz
         slabs = self.stack.slab_db.dframe.loc[(d1 <= self.stack.slab_db.dframe['z']) &
                                               (self.stack.slab_db.dframe['z'] <= d2)]
+        edge_segments = []
+        time = 0
+        prev_slab = None
+        prev_xpos = 0
+        prev_ypos = 0
         for slab in slabs.itertuples():
             # Parameters hard-coded for now.
             # TODO: Make these editable (separate class? interface later?)
@@ -503,18 +508,25 @@ class Viewer:
             pg.draw.circle(self.screen, (11, 255, 255),
                            (xpos, ypos), 4)
 
-            # Still buggy; also super slow
-            # if pd.notnull(slab.nextSlabIdx):
-            #     next_slab = self.stack.slab_db.dframe.loc[(
-            #         self.stack.slab_db.dframe['i'] ==
-            #         int(slab.nextSlabIdx))]
-            #     if next_slab.isin(slabs)['i'].all():
-            #         next_xpos = int(next_slab.y * xfactor / self.stack.dx +
-            #                         xtranslate)
-            #         next_ypos = int(next_slab.x * yfactor / self.stack.dy +
-            #                         ytranslate)
-            #         pg.draw.line(self.screen, (150, 0, 0),
-            #                     (xpos, ypos), (next_xpos, next_ypos))
+            if time == 0:
+                prev_slab = slab
+                prev_xpos = xpos
+                prev_ypos = ypos
+                time += 1
+            else:
+                if slab.edgeIdx == prev_slab.edgeIdx and (
+                        slab.i == prev_slab.i + 1):
+                    # Connect
+                    xpos = int(slab.y * xfactor / self.stack.dx +
+                               xtranslate)
+                    ypos = int(slab.x * yfactor / self.stack.dy +
+                               ytranslate)
+                    pg.draw.line(self.screen, (150, 0, 0),
+                                 (prev_xpos, prev_ypos), (xpos, ypos))
+                prev_slab = slab
+                prev_xpos = xpos
+                prev_ypos = ypos
+                time += 1
 
 
 class StackOutOfBoundsException(Exception):
