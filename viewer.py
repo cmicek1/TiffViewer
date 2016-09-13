@@ -2,7 +2,6 @@ import os
 import tiffstack as ts
 import pygame as pg
 import numpy as np
-import pandas as pd
 
 BIT_DEPTH = 32
 GRAY = (150, 150, 150)

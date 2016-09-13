@@ -1,5 +1,7 @@
 import os
 import tifffile as tf
+import Tkinter as Tk
+import tkFileDialog
 import pandas as pd
 import nodedb as nd
 import slabdb as sd
@@ -51,6 +53,32 @@ class TiffStack:
         self.node_db = nd.NodeDb(pd.read_csv(self._node_dir), DX, DY)
         self.slab_db = sd.SlabDb(pd.read_csv(self._slab_dir), DX, DY)
         self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
+
+    def _makedialog(self, default_dir):
+        """
+        Create a dialog box for file selection.
+
+        :param default_dir: The default directory of the dialog box.
+        :type default_dir: str
+
+        :return: The file path
+        :rtype: str
+        """
+        root = Tk.Tk()
+        root.withdraw()
+        fpath = tkFileDialog.askopenfilename(
+            initialdir=os.path.expanduser(default_dir))
+        return fpath
+
+    def load(self, attr):
+        to_load = self._makedialog('~/Desktop')
+        if attr in self.__dict__.keys():
+            if attr.endswith('db'):
+                to_load = pd.read_csv(to_load)
+                if attr in ['node_db' 'slab_db']:
+                    self.__dict__[attr] = self.__dict__[attr].__init__(to_load, DX, DY)
+                else:
+                    self.__dict__[attr] = self.__dict__[attr].__init__(to_load)
 
     @property
     def maxz(self):
