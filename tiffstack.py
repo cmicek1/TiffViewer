@@ -75,10 +75,13 @@ class TiffStack:
         if attr in self.__dict__.keys():
             if attr.endswith('db'):
                 to_load = pd.read_csv(to_load)
-                if attr in ['node_db' 'slab_db']:
-                    self.__dict__[attr] = self.__dict__[attr].__init__(to_load, DX, DY)
+                if attr in ['node_db', 'slab_db']:
+                    n = self.__dict__[attr].__class__(to_load, DX, DY)
+                    print(n)
+                    self.__dict__[attr] = n
                 else:
-                    self.__dict__[attr] = self.__dict__[attr].__init__(to_load)
+                    n = self.__dict__[attr].__class__(to_load)
+                    self.__dict__[attr] = n
 
     @property
     def maxz(self):
