@@ -21,6 +21,7 @@ class StackBrowser:
 
         root = Tk.Tk()
         root.withdraw()
+        root.lift()
         fpath = tkFileDialog.askopenfilename(
             initialdir=os.path.expanduser('~/Desktop'))
         t = ts.TiffStack(fpath)

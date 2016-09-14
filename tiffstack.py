@@ -3,6 +3,7 @@ import tifffile as tf
 import Tkinter as Tk
 import tkFileDialog
 import pandas as pd
+import igraph as ig
 import nodedb as nd
 import slabdb as sd
 import edgedb as ed
@@ -54,7 +55,7 @@ class TiffStack:
         self.slab_db = sd.SlabDb(pd.read_csv(self._slab_dir), DX, DY)
         self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
 
-    def _makedialog(self, default_dir):
+    def makedialog(default_dir):
         """
         Create a dialog box for file selection.
 
@@ -66,12 +67,21 @@ class TiffStack:
         """
         root = Tk.Tk()
         root.withdraw()
+        root.lift()
         fpath = tkFileDialog.askopenfilename(
             initialdir=os.path.expanduser(default_dir))
         return fpath
 
     def load(self, attr):
-        to_load = self._makedialog('~/Desktop')
+        """
+        Universal loading function; can reload any class attribute if stored in a file.
+
+        :param attr: The name of the attribute to load.
+        :type attr: str
+
+        :return: None
+        """
+        to_load = makedialog('~/Desktop')
         if attr in self.__dict__.keys():
             if attr.endswith('db'):
                 to_load = pd.read_csv(to_load)
@@ -93,3 +103,39 @@ class TiffStack:
         :rtype: int
         """
         return self.imarray.shape[0] - 1
+
+    def tograph(self):
+        g = ig.Graph()
+        g.add_vertices(self.node_db.dframe.shape[0])
+        for edge in self.edge_db.dframe.itertuples():
+            g.add_edge(edge.sourceIdx, edge.targetIdx)
+        g.write_graphml(self.fname + '.graphml')
+
+
+def new():
+    """
+    Way to create stack outside of browser. Select a valid TIFF stack to begin.
+
+    :return: the stack
+    """
+    fpath = makedialog('~/Desktop')
+    stack = TiffStack(fpath)
+    return stack
+
+
+def makedialog(default_dir):
+    """
+    Create a dialog box for file selection.
+
+    :param default_dir: The default directory of the dialog box.
+    :type default_dir: str
+
+    :return: The file path
+    :rtype: str
+    """
+    root = Tk.Tk()
+    root.withdraw()
+    root.lift()
+    fpath = tkFileDialog.askopenfilename(
+        initialdir=os.path.expanduser(default_dir))
+    return fpath
