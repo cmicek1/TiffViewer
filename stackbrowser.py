@@ -20,8 +20,8 @@ class StackBrowser:
         self.viewers = []  # if at some point we port to another library
 
         root = Tk.Tk()
+        root.attributes('-topmost', True)
         root.withdraw()
-        root.lift()
         fpath = tkFileDialog.askopenfilename(
             initialdir=os.path.expanduser('~/Desktop'))
         t = ts.TiffStack(fpath)

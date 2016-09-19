@@ -55,23 +55,6 @@ class TiffStack:
         self.slab_db = sd.SlabDb(pd.read_csv(self._slab_dir), DX, DY)
         self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
 
-    def makedialog(default_dir):
-        """
-        Create a dialog box for file selection.
-
-        :param default_dir: The default directory of the dialog box.
-        :type default_dir: str
-
-        :return: The file path
-        :rtype: str
-        """
-        root = Tk.Tk()
-        root.withdraw()
-        root.lift()
-        fpath = tkFileDialog.askopenfilename(
-            initialdir=os.path.expanduser(default_dir))
-        return fpath
-
     def load(self, attr):
         """
         Universal loading function; can reload any class attribute if stored in a file.
@@ -134,8 +117,8 @@ def makedialog(default_dir):
     :rtype: str
     """
     root = Tk.Tk()
+    root.attributes('-topmost', True)
     root.withdraw()
-    root.lift()
     fpath = tkFileDialog.askopenfilename(
         initialdir=os.path.expanduser(default_dir))
     return fpath
