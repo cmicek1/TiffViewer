@@ -90,9 +90,15 @@ class TiffStack:
     def tograph(self):
         g = ig.Graph()
         g.add_vertices(self.node_db.dframe.shape[0])
+        for field in list(self.node_db.dframe):
+            g.vs[field] = self.node_db.dframe[field].as_matrix().tolist()
         for edge in self.edge_db.dframe.itertuples():
-            g.add_edge(edge.sourceIdx, edge.targetIdx)
-        g.write_graphml(self.fname.split('.')[0] + '.graphml')
+            g.add_edges([(int(edge.targetIdx), int(edge.sourceIdx))])
+        for field in list(self.edge_db.dframe):
+            g.es[field] = self.edge_db.dframe[field].as_matrix().tolist()
+        g.write_graphml(self.fname.split('_ch')[0] + '.graphml')
+
+        return g
 
 
 def new():
