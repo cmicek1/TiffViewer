@@ -109,7 +109,7 @@ class TiffStack:
         g.add_vertices(self.node_db.dframe.shape[0])
         for edge in self.edge_db.dframe.itertuples():
             g.add_edge(edge.sourceIdx, edge.targetIdx)
-        g.write_graphml(self.fname + '.graphml')
+        g.write_graphml(self.fname.split('.')[0] + '.graphml')
 
 
 def new():
