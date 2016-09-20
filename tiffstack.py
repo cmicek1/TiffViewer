@@ -91,11 +91,27 @@ class TiffStack:
         g = ig.Graph()
         g.add_vertices(self.node_db.dframe.shape[0])
         for field in list(self.node_db.dframe):
-            g.vs[field] = self.node_db.dframe[field].as_matrix().tolist()
+            if not self.node_db.dframe[field].isnull().values.any():
+                g.vs[field] = self.node_db.dframe[field].as_matrix().tolist()
+            else:
+                temp = self.node_db.dframe[field].as_matrix().tolist()
+                g.vs[field] = [str(i) for i in temp]
         for edge in self.edge_db.dframe.itertuples():
             g.add_edges([(int(edge.targetIdx), int(edge.sourceIdx))])
+
+            # TODO: Convert slab_db to dictionary (one for each slab), then make a list of slab dicts for each edge,
+            # and convert to string
+            slab_list = []
+            slabs = self.edge_db.dframe.loc[self.slab_db.dframe['edgeIdx'] == edge.i].to_dict(orient='list')
+            print slabs
+
         for field in list(self.edge_db.dframe):
-            g.es[field] = self.edge_db.dframe[field].as_matrix().tolist()
+            if not self.edge_db.dframe[field].isnull().values.any():
+                g.es[field] = self.edge_db.dframe[field].as_matrix().tolist()
+            else:
+                temp = self.edge_db.dframe[field].as_matrix().tolist()
+                g.es[field] = [str(i) for i in temp]
+
         g.write_graphml(self.fname.split('_ch')[0] + '.graphml')
 
         return g
