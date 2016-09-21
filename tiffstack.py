@@ -99,11 +99,8 @@ class TiffStack:
         for edge in self.edge_db.dframe.itertuples():
             g.add_edges([(int(edge.targetIdx), int(edge.sourceIdx))])
 
-            # TODO: Convert slab_db to dictionary (one for each slab), then make a list of slab dicts for each edge,
-            # and convert to string
-            slab_list = []
-            slabs = self.edge_db.dframe.loc[self.slab_db.dframe['edgeIdx'] == edge.i].to_dict(orient='list')
-            print slabs
+            slabs = str(self.slab_db.dframe.loc[self.slab_db.dframe['edgeIdx'] == edge.i].T.to_dict().values())
+            g.es[edge.i]['Slabs'] = slabs
 
         for field in list(self.edge_db.dframe):
             if not self.edge_db.dframe[field].isnull().values.any():
