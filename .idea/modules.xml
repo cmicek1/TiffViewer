@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/TiffViewer.iml" filepath="$PROJECT_DIR$/.idea/TiffViewer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../mapmanager_ipynb-master/.idea/mapmanager_ipynb.iml" filepath="$PROJECT_DIR$/../mapmanager_ipynb-master/.idea/mapmanager_ipynb.iml" />
     </modules>
   </component>
 </project>
