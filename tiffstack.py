@@ -8,7 +8,6 @@ import nodedb as nd
 import slabdb as sd
 import edgedb as ed
 
-
 NODE_DIR = 'nodes'
 SLAB_DIR = 'slabs'
 EDGE_DIR = 'edges'
@@ -24,6 +23,7 @@ class TiffStack:
     Helper class for easy viewing of 3D TIFF stacks.
     Requires TiffFile package.
     """
+
     def __init__(self, directory):
         """
         Constructor; loads image.
@@ -37,8 +37,12 @@ class TiffStack:
         self.directory = directory
         self.fname = os.path.basename(self.directory)
         _ = self.fname.split('_')
-        self.date, self.animal, self.stacknum, self.channel = (
-            _[0], _[1], int(_[2]), _[3].split('.')[0])
+        try:
+            self.date, self.animal, self.stacknum, self.channel = (
+                _[0], _[1], int(_[2]), _[3].split('.')[0])
+        except IndexError:
+            pass
+
         self.image = tf.TiffFile(self.directory)
         self.imarray = self.image.asarray()
         self.dx, self.dy = DX, DY
@@ -75,6 +79,10 @@ class TiffStack:
                 else:
                     n = self.__dict__[attr].__class__(to_load)
                     self.__dict__[attr] = n
+
+    def get_slice(self, z):
+        if 0 <= z <= self.maxz:
+            return self.imarray[z]
 
     @property
     def maxz(self):
