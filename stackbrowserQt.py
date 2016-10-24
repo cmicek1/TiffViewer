@@ -57,10 +57,15 @@ class MainWindow(qg.QMainWindow):
         self.z = 0
 
 
+def _exit_handler():
+    sys.exit(0)
+
+
 def main():
     app = qg.QApplication(sys.argv)
     window = MainWindow()
     window.show()
+    app.aboutToQuit.connect(_exit_handler)
     return app.exec_()
 
 
