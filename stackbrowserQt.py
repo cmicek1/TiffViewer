@@ -4,9 +4,6 @@ import PyQt4.QtCore as qc
 import PyQt4.QtGui as qg
 import stackbrowserQtUI as ui
 import tiffstack as ts
-import nodedb as nd
-import edgedb as ed
-import slabdb as sd
 import Tkinter as Tk
 import tkFileDialog
 
@@ -29,12 +26,24 @@ class MainWindow(qg.QMainWindow):
         self.view.setScene(self.scene)
 
         self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
+        self.view.setHorizontalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
+        self.view.setVerticalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
 
         self.imageLabel = qg.QLabel()
         self.imageLabel.setGeometry(0, 0, 1024, 1024)  # position and size of image
 
-        # After adding this line, app crashes on exit
+        # Note: palette not guaranteed to be cross-platform
+        palette = qg.QPalette()
+        palette.setColor(qg.QPalette.Background, qc.Qt.white)
+        self.imageLabel.setPalette(palette)
+
         self.scene.addWidget(self.imageLabel)
+
+        self.leftToolbar = setter.toolBar
+
+        self.list = qg.QTableView(self)
+        self.list.setFont(qg.QFont("Arial", 10))
+        self.leftToolbar.addWidget(self.list)
 
     def click_handler(self, handle, *args):
         valid_funcs = {'open': self._open}
