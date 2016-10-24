@@ -3,6 +3,7 @@ import numpy as np
 import PyQt4.QtCore as qc
 import PyQt4.QtGui as qg
 import stackbrowserQtUI as ui
+import PointTable as pt
 import tiffstack as ts
 import Tkinter as Tk
 import tkFileDialog
@@ -64,6 +65,9 @@ class MainWindow(qg.QMainWindow):
         self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
 
         self.z = 0
+
+        pointModel = pt.PointTable(self.stack.node_db.dframe)
+        self.list.setModel(pointModel)
 
 
 def _exit_handler():
