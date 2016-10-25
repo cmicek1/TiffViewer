@@ -51,6 +51,39 @@ class MainWindow(qg.QMainWindow):
 
         valid_funcs[handle](args)
 
+    def eventFilter(self, source, event):
+        if event.type() == qc.QEvent.Wheel or event.type() == qc.QEvent.GraphicsSceneWheel:
+            self.wheelEvent(event)
+            return
+
+        if event.type() == qc.QEvent.MouseMove and source is self.view.viewport():
+            pos = event.pos()
+            # print('mouse move: (%d, %d)' % (pos.x(), pos.y()))
+            # self.updateStatus('mouse ' + str(pos.x()) + ' ' + str(pos.y()))
+            return
+
+        if event.type() == qc.QEvent.KeyPress:
+            # self.updateStatus('mouse ' + str(pos.x()) + ' ' + str(pos.y()))
+            self.keyPressEvent(event)
+            return
+
+        return qg.QMainWindow.eventFilter(self, source, event)
+
+    def wheelEvent(self, event):
+        if not self.stack:
+            return
+        else:
+            self.stack.z = self.z + np.sign(event.delta())
+            if self.stack.z < 0:
+                self.stack.z = 0
+            if self.stack.z > self.stack.maxz:
+                self.stack.z = self.stack.maxz
+            # print 'MyWindow.wheelEvent()', event.delta(), self.z
+            # self.label.setText("Total Steps: "+QString.number(self.x))
+
+            a = self.stack.get_slice(0)
+            self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
+
     def _open(self, *args):
         root = Tk.Tk()
         root.attributes('-topmost', True)
