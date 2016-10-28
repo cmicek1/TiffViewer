@@ -18,6 +18,9 @@ class MainWindow(qg.QMainWindow):
 
         action_open.triggered.connect(lambda: self.click_handler('open'))
 
+        self.stack = None
+        self.z = None
+        self.image = None
         self.COLORTABLE = []
         for i in range(256):
             self.COLORTABLE.append(qg.qRgb(i / 4, i, i / 2))
@@ -25,6 +28,9 @@ class MainWindow(qg.QMainWindow):
         self.scene = qg.QGraphicsScene()
         self.view = setter.graphicsView
         self.view.setScene(self.scene)
+
+        self.view.viewport().installEventFilter(self)
+        self.view.installEventFilter(self)
 
         self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
         self.view.setHorizontalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
@@ -54,35 +60,33 @@ class MainWindow(qg.QMainWindow):
     def eventFilter(self, source, event):
         if event.type() == qc.QEvent.Wheel or event.type() == qc.QEvent.GraphicsSceneWheel:
             self.wheelEvent(event)
-            return
 
         if event.type() == qc.QEvent.MouseMove and source is self.view.viewport():
             pos = event.pos()
             # print('mouse move: (%d, %d)' % (pos.x(), pos.y()))
             # self.updateStatus('mouse ' + str(pos.x()) + ' ' + str(pos.y()))
-            return
 
         if event.type() == qc.QEvent.KeyPress:
             # self.updateStatus('mouse ' + str(pos.x()) + ' ' + str(pos.y()))
             self.keyPressEvent(event)
-            return
 
         return qg.QMainWindow.eventFilter(self, source, event)
 
     def wheelEvent(self, event):
-        if not self.stack:
-            return
-        else:
-            self.stack.z = self.z + np.sign(event.delta())
-            if self.stack.z < 0:
-                self.stack.z = 0
-            if self.stack.z > self.stack.maxz:
-                self.stack.z = self.stack.maxz
+        if self.stack is not None:
+            self.z -= np.sign(event.delta())
+            if self.z < 0:
+                self.z = 0
+            if self.z > self.stack.maxz:
+                self.z = self.stack.maxz
             # print 'MyWindow.wheelEvent()', event.delta(), self.z
             # self.label.setText("Total Steps: "+QString.number(self.x))
 
-            a = self.stack.get_slice(0)
+            a = self.stack.get_slice(self.z)
             self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
+            self.image.setColorTable(self.COLORTABLE)
+            self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
+            self.update()
 
     def _open(self, *args):
         root = Tk.Tk()
@@ -92,12 +96,11 @@ class MainWindow(qg.QMainWindow):
             initialdir=os.path.expanduser('~/Desktop'))
         self.stack = ts.TiffStack(fpath)
 
+        self.z = 0
         a = self.stack.get_slice(0)
         self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
         self.image.setColorTable(self.COLORTABLE)
         self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
-
-        self.z = 0
 
         pointModel = pt.PointTable(self.stack.node_db.dframe)
         self.list.setModel(pointModel)
