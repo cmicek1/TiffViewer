@@ -26,7 +26,7 @@ class MainWindow(qg.QMainWindow):
             self.COLORTABLE.append(qg.qRgb(i / 4, i, i / 2))
 
         self.scene = qg.QGraphicsScene()
-        self.view = setter.graphicsView
+        self.view = _MyGraphicsView(setter.graphicsView)
         self.view.setScene(self.scene)
 
         self.view.viewport().installEventFilter(self)
@@ -47,6 +47,7 @@ class MainWindow(qg.QMainWindow):
         self.scene.addWidget(self.imageLabel)
 
         self.leftToolbar = setter.toolBar
+        self.topToolbar = setter.toolBar_2
 
         self.list = qg.QTableView(self)
         self.list.setFont(qg.QFont("Arial", 10))
@@ -104,6 +105,13 @@ class MainWindow(qg.QMainWindow):
 
         pointModel = pt.PointTable(self.stack.node_db.dframe)
         self.list.setModel(pointModel)
+
+
+class _MyGraphicsView(qg.QGraphicsView):
+    """
+    Empty abstract class; suppresses default QGraphicsView scroll behavior.
+    """
+    pass
 
 
 def _exit_handler():
