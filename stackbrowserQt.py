@@ -16,7 +16,7 @@ class MainWindow(qg.QMainWindow):
         ui.Ui_MainWindow.setupUi(setter, self)
         action_open = setter.action_Open
 
-        action_open.triggered.connect(lambda: self.click_handler('open'))
+        action_open.triggered.connect(lambda: self.action_handler('open'))
 
         self.stack = None
         self.z = None
@@ -29,7 +29,7 @@ class MainWindow(qg.QMainWindow):
         self.view = _MyGraphicsView(setter.graphicsView)
         self.view.setScene(self.scene)
 
-        self.view.viewport().installEventFilter(self)
+        # self.view.viewport().installEventFilter(self)
         self.view.installEventFilter(self)
 
         self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
@@ -49,12 +49,20 @@ class MainWindow(qg.QMainWindow):
         self.leftToolbar = setter.toolBar
         self.topToolbar = setter.toolBar_2
 
+        self.zoomSpinBox = qg.QSpinBox()
+        self.zoomSpinBox.setRange(1, 400)
+        self.zoomSpinBox.setSuffix(" %")
+        self.zoomSpinBox.setValue(100)
+        self.zoomSpinBox.setToolTip("Zoom the image")
+        self.zoomSpinBox.setStatusTip(self.zoomSpinBox.toolTip())
+        self.zoomSpinBox.setFocusPolicy(qc.Qt.NoFocus)
+
         self.list = qg.QTableView(self)
         self.list.setFont(qg.QFont("Arial", 10))
         self.leftToolbar.addWidget(self.list)
 
-    def click_handler(self, handle, *args):
-        valid_funcs = {'open': self._open}
+    def action_handler(self, handle, *args):
+        valid_funcs = {'open': self._open, 'pan': self._pan}
 
         valid_funcs[handle](args)
 
@@ -89,7 +97,17 @@ class MainWindow(qg.QMainWindow):
             self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
             self.update()
 
-    def _open(self, *args):
+    def keyPressEvent(self, event):
+        # print 'window.keyPressEvent:', event.text()
+        # use QLabel.setGeometry(h,v,w,h) to pan the image
+        # print 'keyPressEvent()'
+        panvalue = 20
+        k = event.key()
+        pan_keys = [qc.Qt.Key_Left, qc.Qt.Key_Right, qc.Qt.Key_Up, qc.Qt.Key_Down, qc.Qt.Key_Enter, qc.Qt.Key_Return]
+        if k in pan_keys:
+            self.action_handler('pan', k, panvalue)
+
+    def _open(self, args):
         root = Tk.Tk()
         root.attributes('-topmost', True)
         root.withdraw()
@@ -105,6 +123,26 @@ class MainWindow(qg.QMainWindow):
 
         pointModel = pt.PointTable(self.stack.node_db.dframe)
         self.list.setModel(pointModel)
+
+    def _pan(self, args):
+        key = args[0]
+        panvalue = args[1]
+        if key == qc.Qt.Key_Left:
+            # self.imageX -= panvalue
+            self.imageLabel.move(self.imageLabel.x() - panvalue, self.imageLabel.y())
+        if key == qc.Qt.Key_Right:
+            # self.imageX += panvalue
+            self.imageLabel.move(self.imageLabel.x() + panvalue, self.imageLabel.y())
+        if key == qc.Qt.Key_Up:
+            # self.imageY -= panvalue
+            self.imageLabel.move(self.imageLabel.x(), self.imageLabel.y() - panvalue)
+        if key == qc.Qt.Key_Down:
+            # self.imageY += panvalue
+            self.imageLabel.move(self.imageLabel.x(), self.imageLabel.y() + panvalue)
+        if key == qc.Qt.Key_Enter or key == qc.Qt.Key_Return:
+            print 'reset image to full view and center'
+            self.imageLabel.move(0, 0)
+        self.update()
 
 
 class _MyGraphicsView(qg.QGraphicsView):
