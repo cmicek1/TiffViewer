@@ -29,10 +29,10 @@ class MainWindow(qg.QMainWindow):
         self.view = _MyGraphicsView(setter.graphicsView)
         self.view.setScene(self.scene)
 
-        # self.view.viewport().installEventFilter(self)
+        self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
+
         self.view.installEventFilter(self)
 
-        self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
         self.view.setHorizontalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
         self.view.setVerticalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
 
@@ -95,7 +95,6 @@ class MainWindow(qg.QMainWindow):
             self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
             self.image.setColorTable(self.COLORTABLE)
             self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
-            self.update()
 
     def keyPressEvent(self, event):
         # print 'window.keyPressEvent:', event.text()
@@ -129,20 +128,19 @@ class MainWindow(qg.QMainWindow):
         panvalue = args[1]
         if key == qc.Qt.Key_Left:
             # self.imageX -= panvalue
-            self.imageLabel.move(self.imageLabel.x() - panvalue, self.imageLabel.y())
+            self.view.move(self.view.x() - panvalue, self.view.y())
         if key == qc.Qt.Key_Right:
             # self.imageX += panvalue
-            self.imageLabel.move(self.imageLabel.x() + panvalue, self.imageLabel.y())
+            self.view.move(self.view.x() + panvalue, self.view.y())
         if key == qc.Qt.Key_Up:
             # self.imageY -= panvalue
-            self.imageLabel.move(self.imageLabel.x(), self.imageLabel.y() - panvalue)
+            self.view.move(self.view.x(), self.view.y() - panvalue)
         if key == qc.Qt.Key_Down:
             # self.imageY += panvalue
-            self.imageLabel.move(self.imageLabel.x(), self.imageLabel.y() + panvalue)
+            self.view.move(self.view.x(), self.view.y() + panvalue)
         if key == qc.Qt.Key_Enter or key == qc.Qt.Key_Return:
             print 'reset image to full view and center'
-            self.imageLabel.move(0, 0)
-        self.update()
+            self.view.move(0, 0)
 
 
 class _MyGraphicsView(qg.QGraphicsView):
