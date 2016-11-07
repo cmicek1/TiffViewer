@@ -31,7 +31,8 @@ class MainWindow(qg.QMainWindow):
         self.view = _MyGraphicsView(setter.graphicsView)
         self.view.setScene(self.scene)
 
-        self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
+        # self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
+
 
         self.view.setHorizontalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
         self.view.setVerticalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
@@ -40,6 +41,8 @@ class MainWindow(qg.QMainWindow):
 
         self.imageLabel = qg.QLabel()
         self.imageLabel.setGeometry(0, 0, 1024, 1024)  # position and size of image
+        self.imageLabel.setSizePolicy(qg.QSizePolicy.Expanding, qg.QSizePolicy.Expanding)
+        self.imageLabel.setScaledContents(True)
 
         # Note: palette not guaranteed to be cross-platform
         palette = qg.QPalette()
@@ -81,6 +84,14 @@ class MainWindow(qg.QMainWindow):
             # self.updateStatus('mouse ' + str(pos.x()) + ' ' + str(pos.y()))
             self.keyPressEvent(event)
 
+        if event.type() == qc.QEvent.Resize:
+            a = self.stack.get_slice(self.z)
+            self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
+            self.image.setColorTable(self.COLORTABLE)
+            p = qg.QPixmap.fromImage(self.image)
+            self.imageLabel.resize(self.view.viewport().width(), self.view.viewport().height())
+            self.imageLabel.setPixmap(p.scaled(self.view.viewport().width(), self.view.viewport().width()))
+
         return qg.QMainWindow.eventFilter(self, source, event)
 
     def wheelEvent(self, event):
@@ -120,7 +131,9 @@ class MainWindow(qg.QMainWindow):
         a = self.stack.get_slice(0)
         self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
         self.image.setColorTable(self.COLORTABLE)
-        self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
+        p = qg.QPixmap.fromImage(self.image)
+        self.imageLabel.resize(self.view.viewport().width(), self.view.viewport().height())
+        self.imageLabel.setPixmap(p.scaled(self.view.viewport().width(), self.view.viewport().width()))
 
         pointModel = pt.PointTable(self.stack.node_db.dframe)
         self.list.setModel(pointModel)
