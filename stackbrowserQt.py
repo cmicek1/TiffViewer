@@ -25,16 +25,18 @@ class MainWindow(qg.QMainWindow):
         for i in range(256):
             self.COLORTABLE.append(qg.qRgb(i / 4, i, i / 2))
 
+        self.splitter = setter.splitter
+
         self.scene = qg.QGraphicsScene()
         self.view = _MyGraphicsView(setter.graphicsView)
         self.view.setScene(self.scene)
 
         self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
 
-        self.view.installEventFilter(self)
-
         self.view.setHorizontalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
         self.view.setVerticalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
+
+        self.view.keyPressEvent = self.keyPressEvent
 
         self.imageLabel = qg.QLabel()
         self.imageLabel.setGeometry(0, 0, 1024, 1024)  # position and size of image
@@ -122,6 +124,7 @@ class MainWindow(qg.QMainWindow):
 
         pointModel = pt.PointTable(self.stack.node_db.dframe)
         self.list.setModel(pointModel)
+        # self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
 
     def _pan(self, args):
         key = args[0]
