@@ -31,8 +31,7 @@ class MainWindow(qg.QMainWindow):
         self.view = _MyGraphicsView(setter.graphicsView)
         self.view.setScene(self.scene)
 
-        # self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
-
+        self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
 
         self.view.setHorizontalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
         self.view.setVerticalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
@@ -40,8 +39,7 @@ class MainWindow(qg.QMainWindow):
         self.view.keyPressEvent = self.keyPressEvent
 
         self.imageLabel = qg.QLabel()
-        self.imageLabel.setGeometry(0, 0, 1024, 1024)  # position and size of image
-        self.imageLabel.setSizePolicy(qg.QSizePolicy.Expanding, qg.QSizePolicy.Expanding)
+        self.imageLabel.setSizePolicy(qg.QSizePolicy.Ignored, qg.QSizePolicy.Ignored)
         self.imageLabel.setScaledContents(True)
 
         # Note: palette not guaranteed to be cross-platform
@@ -85,12 +83,7 @@ class MainWindow(qg.QMainWindow):
             self.keyPressEvent(event)
 
         if event.type() == qc.QEvent.Resize:
-            a = self.stack.get_slice(self.z)
-            self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
-            self.image.setColorTable(self.COLORTABLE)
-            p = qg.QPixmap.fromImage(self.image)
-            self.imageLabel.resize(self.view.viewport().width(), self.view.viewport().height())
-            self.imageLabel.setPixmap(p.scaled(self.view.viewport().width(), self.view.viewport().width()))
+            self.resizeEvent(event)
 
         return qg.QMainWindow.eventFilter(self, source, event)
 
@@ -108,6 +101,16 @@ class MainWindow(qg.QMainWindow):
             self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
             self.image.setColorTable(self.COLORTABLE)
             self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
+
+    def resizeEvent(self, event):
+        if self.stack is not None:
+            a = self.stack.get_slice(self.z)
+            self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
+            self.image.setColorTable(self.COLORTABLE)
+            p = qg.QPixmap.fromImage(self.image)
+            self.view.resize(self.width(), self.width())
+            self.imageLabel.setPixmap(p.scaled(self.width(), self.width()))
+        self.imageLabel.resize(self.width(), self.width())
 
     def keyPressEvent(self, event):
         # print 'window.keyPressEvent:', event.text()
