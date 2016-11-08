@@ -110,6 +110,7 @@ class MainWindow(qg.QMainWindow):
             p = qg.QPixmap.fromImage(self.image)
             self.view.resize(self.width(), self.width())
             self.imageLabel.setPixmap(p.scaled(self.width(), self.width()))
+
         self.imageLabel.resize(self.width(), self.width())
 
     def keyPressEvent(self, event):
