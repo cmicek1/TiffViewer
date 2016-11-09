@@ -110,6 +110,7 @@ class MainWindow(qg.QMainWindow):
             p = qg.QPixmap.fromImage(self.image)
             self.view.resize(self.width(), self.width())
             self.imageLabel.setPixmap(p.scaled(self.width(), self.width()))
+
         self.imageLabel.resize(self.width(), self.width())
 
     def keyPressEvent(self, event):
@@ -145,28 +146,30 @@ class MainWindow(qg.QMainWindow):
     def _pan(self, args):
         key = args[0]
         panvalue = args[1]
-        if key == qc.Qt.Key_Left:
-            # self.imageX -= panvalue
-            self.view.move(self.view.x() - panvalue, self.view.y())
-        if key == qc.Qt.Key_Right:
-            # self.imageX += panvalue
-            self.view.move(self.view.x() + panvalue, self.view.y())
-        if key == qc.Qt.Key_Up:
-            # self.imageY -= panvalue
-            self.view.move(self.view.x(), self.view.y() - panvalue)
-        if key == qc.Qt.Key_Down:
-            # self.imageY += panvalue
-            self.view.move(self.view.x(), self.view.y() + panvalue)
-        if key == qc.Qt.Key_Enter or key == qc.Qt.Key_Return:
-            print 'reset image to full view and center'
-            self.view.move(0, 0)
+        if self.stack is not None:
+            if key == qc.Qt.Key_Left:
+                # self.imageX -= panvalue
+                self.view.move(self.view.x() - panvalue, self.view.y())
+            if key == qc.Qt.Key_Right:
+                # self.imageX += panvalue
+                self.view.move(self.view.x() + panvalue, self.view.y())
+            if key == qc.Qt.Key_Up:
+                # self.imageY -= panvalue
+                self.view.move(self.view.x(), self.view.y() - panvalue)
+            if key == qc.Qt.Key_Down:
+                # self.imageY += panvalue
+                self.view.move(self.view.x(), self.view.y() + panvalue)
+            if key == qc.Qt.Key_Enter or key == qc.Qt.Key_Return:
+                print 'reset image to full view and center'
+                self.view.move(0, 0)
 
 
 class _MyGraphicsView(qg.QGraphicsView):
     """
     Empty abstract class; suppresses default QGraphicsView scroll behavior.
     """
-    pass
+    def scrollContentsBy(self, a, b):
+        pass
 
 
 def _exit_handler():
