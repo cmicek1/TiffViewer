@@ -29,8 +29,8 @@ class MainWindow(qg.QMainWindow):
 
         self.scene = qg.QGraphicsScene()
         self.view = _MyGraphicsView(setter.graphicsView)
-        self.view.setScene(self.scene)
 
+        self.view.setScene(self.scene)
         self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
 
         self.view.setHorizontalScrollBarPolicy(qc.Qt.ScrollBarAlwaysOff)
@@ -41,7 +41,7 @@ class MainWindow(qg.QMainWindow):
         self.imageLabel = qg.QLabel()
         self.imageLabel.setSizePolicy(qg.QSizePolicy.Ignored, qg.QSizePolicy.Ignored)
         self.imageLabel.setScaledContents(True)
-
+        # print(self.imageLabel.size())
         # Note: palette not guaranteed to be cross-platform
         palette = qg.QPalette()
         palette.setColor(qg.QPalette.Background, qc.Qt.white)
@@ -63,6 +63,7 @@ class MainWindow(qg.QMainWindow):
         self.list = qg.QTableView(self)
         self.list.setFont(qg.QFont("Arial", 10))
         self.leftToolbar.addWidget(self.list)
+        # print(self.view.viewport().size())
 
     def action_handler(self, handle, *args):
         valid_funcs = {'open': self._open, 'pan': self._pan}
@@ -87,6 +88,24 @@ class MainWindow(qg.QMainWindow):
 
         return qg.QMainWindow.eventFilter(self, source, event)
 
+    def showEvent(self, event):
+        size = self.splitter.size()
+        self.imageLabel.resize(size)
+        print(self.imageLabel.size())
+
+    def resizeEvent(self, event):
+        if self.stack is not None:
+            a = self.stack.get_slice(self.z)
+            self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
+            self.image.setColorTable(self.COLORTABLE)
+            p = qg.QPixmap.fromImage(self.image)
+            self.view.resize(self.splitter.width(), self.splitter.width())
+            self.imageLabel.resize(self.splitter.width(), self.splitter.width())
+            self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
+        else:
+            self.view.resize(self.width(), self.width())
+            self.imageLabel.resize(self.width(), self.width())
+
     def wheelEvent(self, event):
         if self.stack is not None:
             self.z -= np.sign(event.delta())
@@ -101,17 +120,6 @@ class MainWindow(qg.QMainWindow):
             self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
             self.image.setColorTable(self.COLORTABLE)
             self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
-
-    def resizeEvent(self, event):
-        if self.stack is not None:
-            a = self.stack.get_slice(self.z)
-            self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
-            self.image.setColorTable(self.COLORTABLE)
-            p = qg.QPixmap.fromImage(self.image)
-            self.view.resize(self.width(), self.width())
-            self.imageLabel.setPixmap(p.scaled(self.width(), self.width()))
-
-        self.imageLabel.resize(self.width(), self.width())
 
     def keyPressEvent(self, event):
         # print 'window.keyPressEvent:', event.text()
@@ -136,9 +144,8 @@ class MainWindow(qg.QMainWindow):
         self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
         self.image.setColorTable(self.COLORTABLE)
         p = qg.QPixmap.fromImage(self.image)
-        self.imageLabel.resize(self.view.viewport().width(), self.view.viewport().height())
-        self.imageLabel.setPixmap(p.scaled(self.view.viewport().width(), self.view.viewport().width()))
-
+        self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
+        print(self.imageLabel.size())
         pointModel = pt.PointTable(self.stack.node_db.dframe)
         self.list.setModel(pointModel)
         # self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
