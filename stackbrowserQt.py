@@ -4,6 +4,7 @@ import PyQt4.QtCore as qc
 import PyQt4.QtGui as qg
 import stackbrowserQtUI as ui
 import PointTable as pt
+import StackPoints as sps
 import tiffstack as ts
 import Tkinter as Tk
 import tkFileDialog
@@ -41,13 +42,15 @@ class MainWindow(qg.QMainWindow):
         self.imageLabel = qg.QLabel()
         self.imageLabel.setSizePolicy(qg.QSizePolicy.Ignored, qg.QSizePolicy.Ignored)
         self.imageLabel.setScaledContents(True)
-        # print(self.imageLabel.size())
         # Note: palette not guaranteed to be cross-platform
         palette = qg.QPalette()
         palette.setColor(qg.QPalette.Background, qc.Qt.white)
         self.imageLabel.setPalette(palette)
 
         self.scene.addWidget(self.imageLabel)
+
+        self.points = sps.DrawingPointsWidget(self)
+        self.scene.addWidget(self.points)
 
         self.leftToolbar = setter.toolBar
         self.topToolbar = setter.toolBar_2
@@ -63,7 +66,6 @@ class MainWindow(qg.QMainWindow):
         self.list = qg.QTableView(self)
         self.list.setFont(qg.QFont("Arial", 10))
         self.leftToolbar.addWidget(self.list)
-        # print(self.view.viewport().size())
 
     def action_handler(self, handle, *args):
         valid_funcs = {'open': self._open, 'pan': self._pan}
@@ -145,7 +147,6 @@ class MainWindow(qg.QMainWindow):
         self.image.setColorTable(self.COLORTABLE)
         p = qg.QPixmap.fromImage(self.image)
         self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
-        print(self.imageLabel.size())
         pointModel = pt.PointTable(self.stack.node_db.dframe)
         self.list.setModel(pointModel)
         # self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
