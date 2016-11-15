@@ -122,6 +122,7 @@ class MainWindow(qg.QMainWindow):
             self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
             self.image.setColorTable(self.COLORTABLE)
             self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
+            self.update()
 
     def keyPressEvent(self, event):
         # print 'window.keyPressEvent:', event.text()

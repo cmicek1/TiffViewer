@@ -31,7 +31,7 @@ class DrawingPointsWidget(qg.QWidget):
         if self.parent().stack is not None:
             self.drawPoints(qp)
 
-    def drawPoints(self, qp):
+    def drawPoints(self, qp, xfactor=None, yfactor=None, xtranslate=None, ytranslate=None):
         # print 'DrawingPointsWidget::drawPoints()'
 
         if not self.isVisible:
@@ -43,12 +43,42 @@ class DrawingPointsWidget(qg.QWidget):
         rectHeight = 7
 
         # TODO: Rewrite for current stack class
-        xyz = self.parent().stack.nodedb.dframe.getMask(self.parent().z)
-        xyz /= float(self.map.stackList[1].header['voxelx'])
-        xyz *= self.scaleFactor
-        # xyz = abs(np.random.random((20,20)) * 100)
-        num = len(xyz)
-        for i in range(num):
-            x = xyz[i][0]
-            y = xyz[i][1]
-            qp.drawEllipse(x, y, rectWidth, rectHeight)
+        # xyz = self.parent().stack.nodedb.dframe.getMask(self.parent().z)
+        # xyz /= float(self.map.stackList[1].header['voxelx'])
+        # xyz *= self.scaleFactor
+        # # xyz = abs(np.random.random((20,20)) * 100)
+        # num = len(xyz)
+        # for i in range(num):
+        #     x = xyz[i][0]
+        #     y = xyz[i][1]
+        #     qp.drawEllipse(x, y, rectWidth, rectHeight)
+
+        offset = 1
+
+        if xfactor is None:
+            xfactor = 1
+
+        if yfactor is None:
+            yfactor = 1
+
+        if xtranslate is None:
+            xtranslate = 0
+
+        if ytranslate is None:
+            ytranslate = 0
+
+        # Min slice
+        d1 = int(self.parent().z - offset)
+        if d1 < 0:
+            d1 = 0
+
+        # Max slice
+        d2 = int(self.parent().z + offset)
+        if d2 > self.parent().stack.maxz:
+            d2 = int(self.parent().stack.maxz)
+        nodes = self.parent().stack.node_db.dframe.loc[(d1 <= self.parent().stack.node_db.dframe['z']) &
+                                                       (self.parent().stack.node_db.dframe['z'] <= d2)]
+        for node in nodes.itertuples():
+            qp.drawEllipse(int(node.y * xfactor / self.parent().stack.dx +
+                           xtranslate), int(node.x * yfactor / self.parent().stack.dy +
+                           ytranslate), rectWidth, rectHeight)
