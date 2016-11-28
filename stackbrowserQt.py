@@ -92,6 +92,7 @@ class MainWindow(qg.QMainWindow):
 
     def showEvent(self, event):
         size = self.splitter.size()
+        self.view.resize(size)
         self.imageLabel.resize(size)
         print(self.imageLabel.size())
 
