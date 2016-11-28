@@ -21,6 +21,7 @@ class MainWindow(qg.QMainWindow):
 
         self.stack = None
         self.z = None
+        self.scale = 1.0
         self.image = None
         self.COLORTABLE = []
         for i in range(256):
@@ -30,6 +31,7 @@ class MainWindow(qg.QMainWindow):
 
         self.scene = qg.QGraphicsScene()
         self.view = _MyGraphicsView(setter.graphicsView)
+        self.view.setMouseTracking(True)
 
         self.view.setScene(self.scene)
         self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
@@ -41,7 +43,7 @@ class MainWindow(qg.QMainWindow):
 
         self.imageLabel = qg.QLabel()
         self.imageLabel.setSizePolicy(qg.QSizePolicy.Ignored, qg.QSizePolicy.Ignored)
-        self.imageLabel.setScaledContents(True)
+
         # Note: palette not guaranteed to be cross-platform
         palette = qg.QPalette()
         palette.setColor(qg.QPalette.Background, qc.Qt.white)
@@ -68,7 +70,7 @@ class MainWindow(qg.QMainWindow):
         self.leftToolbar.addWidget(self.list)
 
     def action_handler(self, handle, *args):
-        valid_funcs = {'open': self._open, 'pan': self._pan}
+        valid_funcs = {'open': self._open, 'pan': self._pan, 'zoom': self._zoom}
 
         valid_funcs[handle](args)
 
@@ -78,7 +80,7 @@ class MainWindow(qg.QMainWindow):
 
         if event.type() == qc.QEvent.MouseMove and source is self.view.viewport():
             pos = event.pos()
-            # print('mouse move: (%d, %d)' % (pos.x(), pos.y()))
+            print('mouse move: (%d, %d)' % (pos.x(), pos.y()))
             # self.updateStatus('mouse ' + str(pos.x()) + ' ' + str(pos.y()))
 
         if event.type() == qc.QEvent.KeyPress:
@@ -130,10 +132,14 @@ class MainWindow(qg.QMainWindow):
         # use QLabel.setGeometry(h,v,w,h) to pan the image
         # print 'keyPressEvent()'
         panvalue = 20
+        zoomfactor = 1.5
         k = event.key()
         pan_keys = [qc.Qt.Key_Left, qc.Qt.Key_Right, qc.Qt.Key_Up, qc.Qt.Key_Down, qc.Qt.Key_Enter, qc.Qt.Key_Return]
+        zoom_keys = [qc.Qt.Key_Plus, qc.Qt.Key_Minus, qc.Qt.Key_Enter, qc.Qt.Key_Return]
         if k in pan_keys:
             self.action_handler('pan', k, panvalue)
+        if k in zoom_keys:
+            self.action_handler('zoom', k, zoomfactor)
 
     def _open(self, args):
         root = Tk.Tk()
@@ -172,6 +178,22 @@ class MainWindow(qg.QMainWindow):
             if key == qc.Qt.Key_Enter or key == qc.Qt.Key_Return:
                 print 'reset image to full view and center'
                 self.view.move(0, 0)
+
+    def _zoom(self, args):
+        key = args[0]
+        factor = args[1]
+        if key == qc.Qt.Key_Plus:
+            self.scale *= factor
+            self.view.setTransformationAnchor(qg.QGraphicsView.AnchorUnderMouse)
+            self.view.scale(factor, factor)
+        if key == qc.Qt.Key_Minus:
+            self.scale /= factor
+            self.view.setTransformationAnchor(qg.QGraphicsView.AnchorUnderMouse)
+            self.view.scale(1.0/factor, 1.0/factor)
+        if key == qc.Qt.Key_Enter or key == qc.Qt.Key_Return:
+            self.view.setTransformationAnchor(qg.QGraphicsView.AnchorUnderMouse)
+            self.view.scale(1.0/self.scale, 1.0/self.scale)
+            self.scale = 1.0
 
 
 class _MyGraphicsView(qg.QGraphicsView):
