@@ -43,6 +43,7 @@ class MainWindow(qg.QMainWindow):
 
         self.imageLabel = qg.QLabel()
         self.imageLabel.setSizePolicy(qg.QSizePolicy.Ignored, qg.QSizePolicy.Ignored)
+        self.imageLabel.setScaledContents(True)
 
         # Note: palette not guaranteed to be cross-platform
         palette = qg.QPalette()
