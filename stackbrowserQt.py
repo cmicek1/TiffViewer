@@ -31,7 +31,6 @@ class MainWindow(qg.QMainWindow):
 
         self.scene = qg.QGraphicsScene()
         self.view = _MyGraphicsView(setter.graphicsView)
-        self.view.setMouseTracking(True)
 
         self.view.setScene(self.scene)
         self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
@@ -183,16 +182,23 @@ class MainWindow(qg.QMainWindow):
     def _zoom(self, args):
         key = args[0]
         factor = args[1]
+        old_pos = self.view.mapToScene(self.view.mapFromGlobal(qg.QCursor.pos()))
         if key == qc.Qt.Key_Plus:
             self.scale *= factor
-            self.view.setTransformationAnchor(qg.QGraphicsView.AnchorUnderMouse)
+            # self.view.setTransformationAnchor(qg.QGraphicsView.AnchorUnderMouse)
             self.view.scale(factor, factor)
+            new_pos = self.view.mapToScene(self.view.mapFromGlobal(qg.QCursor.pos()))
+            delta = new_pos - old_pos
+            self.view.translate(delta.x(), delta.y())
         if key == qc.Qt.Key_Minus:
             self.scale /= factor
-            self.view.setTransformationAnchor(qg.QGraphicsView.AnchorUnderMouse)
+            # self.view.setTransformationAnchor(qg.QGraphicsView.AnchorUnderMouse)
             self.view.scale(1.0/factor, 1.0/factor)
+            new_pos = self.view.mapToScene(self.view.mapFromGlobal(qg.QCursor.pos()))
+            delta = new_pos - old_pos
+            self.view.translate(delta.x(), delta.y())
         if key == qc.Qt.Key_Enter or key == qc.Qt.Key_Return:
-            self.view.setTransformationAnchor(qg.QGraphicsView.AnchorUnderMouse)
+            # self.view.setTransformationAnchor(qg.QGraphicsView.AnchorUnderMouse)
             self.view.scale(1.0/self.scale, 1.0/self.scale)
             self.scale = 1.0
 
@@ -202,6 +208,7 @@ class _MyGraphicsView(qg.QGraphicsView):
     Empty abstract class; suppresses default QGraphicsView scroll behavior.
     """
     def scrollContentsBy(self, a, b):
+        # Apparently this effects the transformation anchor
         pass
 
 

@@ -12,6 +12,7 @@ class DrawingPointsWidget(qg.QWidget):
         self.isVisible = 1
 
         self.setWindowFlags(self.windowFlags() | qc.Qt.FramelessWindowHint)
+        self.setMouseTracking(True)
 
         # self.setAttribute(Qt.WA_NoSystemBackground)
         self.setAttribute(qc.Qt.WA_TranslucentBackground)
@@ -75,6 +76,7 @@ class DrawingPointsWidget(qg.QWidget):
         nodes = self.browser.stack.node_db.dframe.loc[(d1 <= self.browser.stack.node_db.dframe['z']) &
                                                        (self.browser.stack.node_db.dframe['z'] <= d2)]
         for node in nodes.itertuples():
+            # TODO: Replace these with QGraphicsItems, add to scene
             qp.drawEllipse(int(node.x * xfactor / self.browser.stack.dx +
                            xtranslate), int(node.y * yfactor / self.browser.stack.dy +
                            ytranslate), rectWidth, rectHeight)
