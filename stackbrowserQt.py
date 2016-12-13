@@ -200,6 +200,9 @@ class MainWindow(qg.QMainWindow):
         if key == qc.Qt.Key_Enter or key == qc.Qt.Key_Return:
             # self.view.setTransformationAnchor(qg.QGraphicsView.AnchorUnderMouse)
             self.view.scale(1.0/self.scale, 1.0/self.scale)
+            new_pos = self.view.mapFromScene(0, 0)
+            delta = -new_pos
+            self.view.translate(delta.x(), delta.y())
             self.scale = 1.0
 
 
