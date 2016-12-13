@@ -5,6 +5,8 @@ import PyQt4.QtGui as qg
 class DrawingPointsWidget(qg.QWidget):
     def __init__(self, browser):
         super(qg.QWidget, self).__init__()
+        self.nodes = []
+        self.slabs = []
 
         # Want to pass reference to keep z up-to-date
         self.browser = browser
@@ -28,17 +30,13 @@ class DrawingPointsWidget(qg.QWidget):
 
     def paintEvent(self, e):
         self.setUI()
-        qp = qg.QPainter(self)
-        if self.browser.stack is not None:
-            self.drawPoints(qp)
 
-    def drawPoints(self, qp, xfactor=None, yfactor=None, xtranslate=None, ytranslate=None):
-        # print 'DrawingPointsWidget::drawPoints()'
+    def drawPoints(self, xfactor=None, yfactor=None, xtranslate=None, ytranslate=None):
 
         if not self.isVisible:
             return
 
-        qp.setPen(qg.QPen(qc.Qt.red, 6, qc.Qt.DashDotLine, qc.Qt.RoundCap))
+        pen = qg.QPen(qc.Qt.cyan, 4, qc.Qt.DashDotLine, qc.Qt.RoundCap)
 
         rectWidth = 7
         rectHeight = 7
@@ -75,8 +73,26 @@ class DrawingPointsWidget(qg.QWidget):
             d2 = int(self.browser.stack.maxz)
         nodes = self.browser.stack.node_db.dframe.loc[(d1 <= self.browser.stack.node_db.dframe['z']) &
                                                        (self.browser.stack.node_db.dframe['z'] <= d2)]
+
+        slabs = self.browser.stack.slab_db.dframe.loc[(d1 <= self.browser.stack.slab_db.dframe['z']) &
+                                                      (self.browser.stack.slab_db.dframe['z'] <= d2)]
+
+        for slab in slabs.itertuples():
+            s = qg.QGraphicsEllipseItem(int(slab.x * xfactor / self.browser.stack.dx +
+                                            xtranslate), int(slab.y * yfactor / self.browser.stack.dy +
+                                                             ytranslate), rectWidth, rectHeight)
+            s.setPen(pen)
+            self.nodes.append(s)
+            self.browser.scene.addItem(s)
+            # TODO: Draw edges
+
+        pen.setColor(qc.Qt.red)
+        pen.setWidth(6)
+
         for node in nodes.itertuples():
-            # TODO: Replace these with QGraphicsItems, add to scene
-            qp.drawEllipse(int(node.x * xfactor / self.browser.stack.dx +
+            n = qg.QGraphicsEllipseItem(int(node.x * xfactor / self.browser.stack.dx +
                            xtranslate), int(node.y * yfactor / self.browser.stack.dy +
                            ytranslate), rectWidth, rectHeight)
+            n.setPen(pen)
+            self.nodes.append(n)
+            self.browser.scene.addItem(n)
