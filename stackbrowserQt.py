@@ -101,13 +101,6 @@ class MainWindow(qg.QMainWindow):
     def resizeEvent(self, event):
         if self.stack is not None:
             # Add drawing nodes to window display functions
-            # First delete old nodes, if any
-            for n in self.points.nodes:
-                self.scene.removeItem(n)
-            for s in self.points.slabs:
-                self.scene.removeItem(s)
-            self.points.nodes = []
-            self.points.slabs = []
             a = self.stack.get_slice(self.z)
             self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
             self.image.setColorTable(self.COLORTABLE)
@@ -115,8 +108,9 @@ class MainWindow(qg.QMainWindow):
             self.view.resize(self.splitter.width(), self.splitter.width())
             self.imageLabel.resize(self.splitter.width(), self.splitter.width())
             self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
+
             # Now draw new nodes
-            self.points.drawPoints()
+            self.points.drawPoints(resize=True)
         else:
             self.view.resize(self.width(), self.width())
             self.imageLabel.resize(self.width(), self.width())
@@ -124,13 +118,6 @@ class MainWindow(qg.QMainWindow):
     def wheelEvent(self, event):
         if self.stack is not None:
             # Add drawing nodes to window display functions
-            # First delete old nodes, if any
-            for n in self.points.nodes:
-                self.scene.removeItem(n)
-            for s in self.points.slabs:
-                self.scene.removeItem(s)
-            self.points.nodes = []
-            self.points.slabs = []
             self.z -= np.sign(event.delta())
             if self.z < 0:
                 self.z = 0
@@ -145,7 +132,6 @@ class MainWindow(qg.QMainWindow):
             self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
             # Now draw new nodes
             self.points.drawPoints()
-            self.update()
 
     def keyPressEvent(self, event):
         # print 'window.keyPressEvent:', event.text()
@@ -170,12 +156,6 @@ class MainWindow(qg.QMainWindow):
         self.stack = ts.TiffStack(fpath)
 
         self.z = 0
-        for n in self.points.nodes:
-            self.scene.removeItem(n)
-        for s in self.points.slabs:
-            self.scene.removeItem(s)
-        self.points.nodes = []
-        self.points.slabs = []
         a = self.stack.get_slice(0)
         self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
         self.image.setColorTable(self.COLORTABLE)
@@ -183,6 +163,7 @@ class MainWindow(qg.QMainWindow):
         self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
         pointModel = pt.PointTable(self.stack.node_db.dframe)
         self.list.setModel(pointModel)
+        self.points.initPoints()
         self.points.drawPoints()
         # self.view.fitInView(self.scene.sceneRect(), qc.Qt.KeepAspectRatio)
 
