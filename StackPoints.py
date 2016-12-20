@@ -18,6 +18,7 @@ class DrawingPointsWidget(qg.QWidget):
 
         self.setAttribute(qc.Qt.WA_TranslucentBackground)
         self.start_scale = None
+        self.cur_scale = None
 
     def setUI(self):
 
@@ -40,6 +41,7 @@ class DrawingPointsWidget(qg.QWidget):
 
         # Note: Might break on zoom/further manipulations; more testing necessary
         self.start_scale = float(self.browser.splitter.width()) / self.browser.stack.imarray.shape[1]
+        self.cur_scale = self.start_scale
 
         if xfactor is None:
             xfactor = self.start_scale
@@ -58,9 +60,10 @@ class DrawingPointsWidget(qg.QWidget):
             ytranslate = 0
 
         for slab in self.browser.stack.slab_db.dframe.itertuples():
-            s = qg.QGraphicsEllipseItem(int(slab.x * xfactor / self.browser.stack.dx +
-                                        xtranslate), int(slab.y * yfactor / self.browser.stack.dy +
-                                        ytranslate), rectWidth, rectHeight)
+            s = qg.QGraphicsEllipseItem(0, 0, rectWidth, rectHeight)
+            s.setPos(int(slab.x * xfactor / self.browser.stack.dx +
+                     xtranslate), int(slab.y * yfactor / self.browser.stack.dy +
+                     ytranslate))
             s.setPen(pen)
             s.setBrush(brush)
             s.hide()
@@ -76,9 +79,10 @@ class DrawingPointsWidget(qg.QWidget):
         brush.setColor(qc.Qt.red)
 
         for node in self.browser.stack.node_db.dframe.itertuples():
-            n = qg.QGraphicsEllipseItem(int(node.x * xfactor / self.browser.stack.dx +
-                                        xtranslate), int(node.y * yfactor / self.browser.stack.dy +
-                                        ytranslate), rectWidth, rectHeight)
+            n = qg.QGraphicsEllipseItem(0, 0, rectWidth, rectHeight)
+            n.setPos(int(node.x * xfactor / self.browser.stack.dx +
+                     xtranslate), int(node.y * yfactor / self.browser.stack.dy +
+                     ytranslate))
             n.setPen(pen)
             n.setBrush(brush)
             n.hide()
@@ -127,19 +131,22 @@ class DrawingPointsWidget(qg.QWidget):
                 for n in self.nodes[nxt]:
                     n.hide()
 
+        scale = float(self.browser.splitter.width()) / self.browser.stack.imarray.shape[1]
+        if resize:
+            for k in self.slabs:
+                for s in self.slabs[k]:
+                    s.setPos(s.pos() / self.cur_scale * scale)
+            for k in self.nodes:
+                for n in self.nodes[k]:
+                    n.setPos(n.pos() / self.cur_scale * scale)
+
         for z in range(d1, d2 + 1):
             if z in self.slabs:
                 for s in self.slabs[z]:
-                    if resize:
-                        scale = float(self.browser.splitter.width()) / self.browser.stack.imarray.shape[1]
-                        s.setPos(s.x() / self.start_scale * scale,
-                                               s.y() / self.start_scale * scale)
-                        s.update()
                     s.show()
 
             if z in self.nodes:
                 for n in self.nodes[z]:
-                    if resize:
-                        n.resize()
-                        n.update()
                     n.show()
+
+        self.cur_scale = scale
