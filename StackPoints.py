@@ -209,6 +209,7 @@ class DrawingPointsWidget(qg.QWidget):
     class Slab(qg.QGraphicsEllipseItem):
         def __init__(self, *_args, **kwargs):
             super(qg.QGraphicsEllipseItem, self).__init__()
+
             self.dfentry = None
             if 'dfentry' in kwargs:
                 self.dfentry = kwargs['dfentry']
