@@ -7,6 +7,7 @@ class DrawingPointsWidget(qg.QWidget):
         super(qg.QWidget, self).__init__()
         self.nodes = {}
         self.slabs = {}
+        self.edge_segs = {}
 
         # Want to pass reference to keep z up-to-date
         self.browser = browser
@@ -31,13 +32,14 @@ class DrawingPointsWidget(qg.QWidget):
 
     def initPoints(self, xfactor=None, yfactor=None, xtranslate=None, ytranslate=None):
 
-        pen = qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap)
-        brush = qg.QBrush(qc.Qt.cyan)
+        slab_pen = qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap)
+        slab_brush = qg.QBrush(qc.Qt.cyan)
+
+        node_edge_pen = qg.QPen(qc.Qt.red, 1, qc.Qt.SolidLine, qc.Qt.RoundCap)
+        node_edge_brush = qg.QBrush(qc.Qt.red)
 
         rectWidth = 7
         rectHeight = 7
-
-        offset = 1
 
         # Note: Might break on zoom/further manipulations; more testing necessary
         self.start_scale = float(self.browser.splitter.width()) / self.browser.stack.imarray.shape[1]
@@ -59,32 +61,64 @@ class DrawingPointsWidget(qg.QWidget):
         if ytranslate is None:
             ytranslate = 0
 
+        time = 0
+        prev_slab = None
+        prev_xpos = 0
+        prev_ypos = 0
         for slab in self.browser.stack.slab_db.dframe.itertuples():
-            s = qg.QGraphicsEllipseItem(0, 0, rectWidth, rectHeight)
-            s.setPos(int(slab.x * xfactor / self.browser.stack.dx +
-                     xtranslate), int(slab.y * yfactor / self.browser.stack.dy +
-                     ytranslate))
-            s.setPen(pen)
-            s.setBrush(brush)
-            s.hide()
+            s = self.Slab(0, 0, rectWidth, rectHeight, dfentry=slab)
+            xpos = int(slab.x * xfactor / self.browser.stack.dx +
+                       xtranslate)
+            ypos = int(slab.y * yfactor / self.browser.stack.dy +
+                       ytranslate)
+            s.setPos(xpos, ypos)
+            s.setPen(slab_pen)
+            s.setBrush(slab_brush)
+            s.show()
+
             if slab.z not in self.slabs:
                 self.slabs[slab.z] = [s]
             else:
                 self.slabs[slab.z].append(s)
             self.browser.scene.addItem(s)
-            # TODO: Draw edges
 
-        pen.setColor(qc.Qt.red)
-        pen.setWidth(7)
-        brush.setColor(qc.Qt.red)
+            if time == 0:
+                prev_slab = slab
+                prev_xpos = xpos
+                prev_ypos = ypos
+                time += 1
+            else:
+                if slab.edgeIdx == prev_slab.edgeIdx and (
+                            slab.i == prev_slab.i + 1):
+                    # Connect
+                    es = self.EdgeSegment(0, 0, 0, 0, rectWidth, rectHeight, idx=slab.edgeIdx)
+                    es.endpoints = [prev_slab, slab]
+                    xpos = int(slab.x * xfactor / self.browser.stack.dx +
+                               xtranslate)
+                    ypos = int(slab.y * yfactor / self.browser.stack.dy +
+                               ytranslate)
+                    es.setLine(prev_xpos, prev_ypos, xpos, ypos)
+                    es.setPen(node_edge_pen)
+                    es.hide()
+                    if slab.edgeIdx not in self.edge_segs:
+                        self.edge_segs[slab.edgeIdx] = [es]
+                    else:
+                        self.slabs[slab.z].append(s)
+                    self.browser.scene.addItem(es)
+                prev_slab = slab
+                prev_xpos = xpos
+                prev_ypos = ypos
+                time += 1
+
+        node_edge_pen.setWidth(7)
 
         for node in self.browser.stack.node_db.dframe.itertuples():
-            n = qg.QGraphicsEllipseItem(0, 0, rectWidth, rectHeight)
+            n = self.Node(0, 0, rectWidth, rectHeight, dfentry=node)
             n.setPos(int(node.x * xfactor / self.browser.stack.dx +
                      xtranslate), int(node.y * yfactor / self.browser.stack.dy +
                      ytranslate))
-            n.setPen(pen)
-            n.setBrush(brush)
+            n.setPen(node_edge_pen)
+            n.setBrush(node_edge_brush)
             n.hide()
             if node.z not in self.nodes:
                 self.nodes[node.z] = [n]
@@ -106,14 +140,18 @@ class DrawingPointsWidget(qg.QWidget):
             d1 = 0
             prev = None
 
-        if prev:
-            if prev in self.slabs:
-                for s in self.slabs[prev]:
-                    s.hide()
+        # if prev is not None:
+        #     if prev in self.slabs:
+        #         for s in self.slabs[prev]:
+        #             s.hide()
+        #             if s.dfentry.edgeIdx in self.edge_segs:
+        #                 for es in self.edge_segs[s.dfentry.edgeIdx]:
+        #                     if es.endpoints[0].z <= prev and es.endpoints[1] <= prev:
+        #                         es.hide()
 
-            if prev in self.nodes:
-                for n in self.nodes[prev]:
-                    n.hide()
+            # if prev in self.nodes:
+            #     for n in self.nodes[prev]:
+            #         n.hide()
 
         # Max slice
         d2 = int(self.browser.z + offset)
@@ -122,14 +160,18 @@ class DrawingPointsWidget(qg.QWidget):
             d2 = int(self.browser.stack.maxz)
             nxt = None
 
-        if nxt:
-            if nxt in self.slabs:
-                for s in self.slabs[nxt]:
-                    s.hide()
+        # if nxt is not None:
+        #     if nxt in self.slabs:
+        #         for s in self.slabs[nxt]:
+        #             s.hide()
+        #             if s.dfentry.edgeIdx in self.edge_segs:
+        #                 for es in self.edge_segs[s.dfentry.edgeIdx]:
+        #                     if es.endpoints[0].z >= nxt and es.endpoints[1] >= nxt:
+        #                         es.hide()
 
-            if nxt in self.nodes:
-                for n in self.nodes[nxt]:
-                    n.hide()
+            # if nxt in self.nodes:
+            #     for n in self.nodes[nxt]:
+            #         n.hide()
 
         scale = float(self.browser.splitter.width()) / self.browser.stack.imarray.shape[1]
         if resize:
@@ -150,3 +192,37 @@ class DrawingPointsWidget(qg.QWidget):
                     n.show()
 
         self.cur_scale = scale
+
+    class Node(qg.QGraphicsEllipseItem):
+        def __init__(self, *_args, **kwargs):
+            super(qg.QGraphicsEllipseItem, self).__init__()
+            self.dfentry = None
+            if 'dfentry' in kwargs:
+                self.dfentry = kwargs['dfentry']
+
+        # def boundingRect(self):
+        #     qg.QGraphicsEllipseItem.boundingRect(self)
+        #
+        # def paint(self, painter, option, widget=0):
+        #     qg.QGraphicsEllipseItem.paint(self, painter, object, widget)
+
+    class Slab(qg.QGraphicsEllipseItem):
+        def __init__(self, *_args, **kwargs):
+            super(qg.QGraphicsEllipseItem, self).__init__()
+            self.dfentry = None
+            if 'dfentry' in kwargs:
+                self.dfentry = kwargs['dfentry']
+
+        # def boundingRect(self):
+        #     qg.QGraphicsEllipseItem.boundingRect(self)
+        #
+        # def paint(self, painter, option, widget=0):
+        #     qg.QGraphicsEllipseItem.paint(self, painter, object, widget)
+
+    class EdgeSegment(qg.QGraphicsLineItem):
+        def __init__(self, *_args, **kwargs):
+            super(qg.QGraphicsLineItem, self).__init__()
+            self.idx = None
+            if 'idx' in kwargs:
+                self.idx = kwargs['idx']
+            self.endpoints = []
