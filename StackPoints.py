@@ -83,16 +83,16 @@ class DrawingPointsWidget(qg.QWidget):
             self.browser.scene.addItem(s)
 
             if time == 0:
-                prev_slab = slab
+                prev_slab = s
                 prev_xpos = xpos
                 prev_ypos = ypos
                 time += 1
             else:
-                if slab.edgeIdx == prev_slab.edgeIdx and (
-                            slab.i == prev_slab.i + 1):
+                if slab.edgeIdx == prev_slab.dfentry.edgeIdx and (
+                            slab.i == prev_slab.dfentry.i + 1):
                     # Connect
                     es = self.EdgeSegment(0, 0, 0, 0, idx=slab.edgeIdx)
-                    es.endpoints = [prev_slab, slab]
+                    es.endpoints = [prev_slab, s]
                     xpos = int(slab.x * xfactor / self.browser.stack.dx +
                                xtranslate)
                     ypos = int(slab.y * yfactor / self.browser.stack.dy +
@@ -103,9 +103,9 @@ class DrawingPointsWidget(qg.QWidget):
                     if slab.edgeIdx not in self.edge_segs:
                         self.edge_segs[slab.edgeIdx] = [es]
                     else:
-                        self.slabs[slab.z].append(s)
+                        self.edge_segs[slab.edgeIdx].append(es)
                     self.browser.scene.addItem(es)
-                prev_slab = slab
+                prev_slab = s
                 prev_xpos = xpos
                 prev_ypos = ypos
                 time += 1
@@ -146,7 +146,7 @@ class DrawingPointsWidget(qg.QWidget):
                     s.hide()
                     if s.dfentry.edgeIdx in self.edge_segs:
                         for es in self.edge_segs[s.dfentry.edgeIdx]:
-                            if es.endpoints[0].z <= prev and es.endpoints[1] <= prev:
+                            if es.endpoints[0].dfentry.z <= prev and es.endpoints[1].dfentry.z <= prev:
                                 es.hide()
 
             if prev in self.nodes:
@@ -166,7 +166,7 @@ class DrawingPointsWidget(qg.QWidget):
                     s.hide()
                     if s.dfentry.edgeIdx in self.edge_segs:
                         for es in self.edge_segs[s.dfentry.edgeIdx]:
-                            if es.endpoints[0].z >= nxt and es.endpoints[1] >= nxt:
+                            if es.endpoints[0].dfentry.z >= nxt and es.endpoints[1].dfentry.z >= nxt:
                                 es.hide()
 
             if nxt in self.nodes:
@@ -178,14 +178,30 @@ class DrawingPointsWidget(qg.QWidget):
             for k in self.slabs:
                 for s in self.slabs[k]:
                     s.setPos(s.pos() / self.cur_scale * scale)
+                    # Handle error case of edge with one slab
+                    try:
+                        for es in self.edge_segs[s.dfentry.edgeIdx]:
+                            temp = es.line()
+                            temp.setP1(es.line().p1() / self.cur_scale * scale)
+                            temp.setP2(es.line().p2() / self.cur_scale * scale)
+                            es.setLine(temp)
+                    except KeyError:
+                        pass
             for k in self.nodes:
                 for n in self.nodes[k]:
                     n.setPos(n.pos() / self.cur_scale * scale)
 
         for z in range(d1, d2 + 1):
+            visible_edges = []
             if z in self.slabs:
                 for s in self.slabs[z]:
                     s.show()
+                    if s.dfentry.edgeIdx not in visible_edges:
+                        visible_edges.append(s.dfentry.edgeIdx)
+                for idx in visible_edges:
+                    for es in self.edge_segs[idx]:
+                        if es.endpoints[0].isVisible() or es.endpoints[1].isVisible():
+                            es.show()
 
             if z in self.nodes:
                 for n in self.nodes[z]:
