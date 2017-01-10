@@ -74,7 +74,7 @@ class DrawingPointsWidget(qg.QWidget):
             s.setPos(xpos, ypos)
             s.setPen(slab_pen)
             s.setBrush(slab_brush)
-            s.show()
+            s.hide()
 
             if slab.z not in self.slabs:
                 self.slabs[slab.z] = [s]
@@ -91,7 +91,7 @@ class DrawingPointsWidget(qg.QWidget):
                 if slab.edgeIdx == prev_slab.edgeIdx and (
                             slab.i == prev_slab.i + 1):
                     # Connect
-                    es = self.EdgeSegment(0, 0, 0, 0, rectWidth, rectHeight, idx=slab.edgeIdx)
+                    es = self.EdgeSegment(0, 0, 0, 0, idx=slab.edgeIdx)
                     es.endpoints = [prev_slab, slab]
                     xpos = int(slab.x * xfactor / self.browser.stack.dx +
                                xtranslate)
@@ -140,18 +140,18 @@ class DrawingPointsWidget(qg.QWidget):
             d1 = 0
             prev = None
 
-        # if prev is not None:
-        #     if prev in self.slabs:
-        #         for s in self.slabs[prev]:
-        #             s.hide()
-        #             if s.dfentry.edgeIdx in self.edge_segs:
-        #                 for es in self.edge_segs[s.dfentry.edgeIdx]:
-        #                     if es.endpoints[0].z <= prev and es.endpoints[1] <= prev:
-        #                         es.hide()
+        if prev is not None:
+            if prev in self.slabs:
+                for s in self.slabs[prev]:
+                    s.hide()
+                    if s.dfentry.edgeIdx in self.edge_segs:
+                        for es in self.edge_segs[s.dfentry.edgeIdx]:
+                            if es.endpoints[0].z <= prev and es.endpoints[1] <= prev:
+                                es.hide()
 
-            # if prev in self.nodes:
-            #     for n in self.nodes[prev]:
-            #         n.hide()
+            if prev in self.nodes:
+                for n in self.nodes[prev]:
+                    n.hide()
 
         # Max slice
         d2 = int(self.browser.z + offset)
@@ -160,18 +160,18 @@ class DrawingPointsWidget(qg.QWidget):
             d2 = int(self.browser.stack.maxz)
             nxt = None
 
-        # if nxt is not None:
-        #     if nxt in self.slabs:
-        #         for s in self.slabs[nxt]:
-        #             s.hide()
-        #             if s.dfentry.edgeIdx in self.edge_segs:
-        #                 for es in self.edge_segs[s.dfentry.edgeIdx]:
-        #                     if es.endpoints[0].z >= nxt and es.endpoints[1] >= nxt:
-        #                         es.hide()
+        if nxt is not None:
+            if nxt in self.slabs:
+                for s in self.slabs[nxt]:
+                    s.hide()
+                    if s.dfentry.edgeIdx in self.edge_segs:
+                        for es in self.edge_segs[s.dfentry.edgeIdx]:
+                            if es.endpoints[0].z >= nxt and es.endpoints[1] >= nxt:
+                                es.hide()
 
-            # if nxt in self.nodes:
-            #     for n in self.nodes[nxt]:
-            #         n.hide()
+            if nxt in self.nodes:
+                for n in self.nodes[nxt]:
+                    n.hide()
 
         scale = float(self.browser.splitter.width()) / self.browser.stack.imarray.shape[1]
         if resize:
@@ -195,34 +195,22 @@ class DrawingPointsWidget(qg.QWidget):
 
     class Node(qg.QGraphicsEllipseItem):
         def __init__(self, *_args, **kwargs):
-            super(qg.QGraphicsEllipseItem, self).__init__()
+            super(qg.QGraphicsEllipseItem, self).__init__(*_args)
             self.dfentry = None
             if 'dfentry' in kwargs:
                 self.dfentry = kwargs['dfentry']
-
-        # def boundingRect(self):
-        #     qg.QGraphicsEllipseItem.boundingRect(self)
-        #
-        # def paint(self, painter, option, widget=0):
-        #     qg.QGraphicsEllipseItem.paint(self, painter, object, widget)
 
     class Slab(qg.QGraphicsEllipseItem):
         def __init__(self, *_args, **kwargs):
-            super(qg.QGraphicsEllipseItem, self).__init__()
+            super(qg.QGraphicsEllipseItem, self).__init__(*_args)
 
             self.dfentry = None
             if 'dfentry' in kwargs:
                 self.dfentry = kwargs['dfentry']
 
-        # def boundingRect(self):
-        #     qg.QGraphicsEllipseItem.boundingRect(self)
-        #
-        # def paint(self, painter, option, widget=0):
-        #     qg.QGraphicsEllipseItem.paint(self, painter, object, widget)
-
     class EdgeSegment(qg.QGraphicsLineItem):
         def __init__(self, *_args, **kwargs):
-            super(qg.QGraphicsLineItem, self).__init__()
+            super(qg.QGraphicsLineItem, self).__init__(*_args)
             self.idx = None
             if 'idx' in kwargs:
                 self.idx = kwargs['idx']
