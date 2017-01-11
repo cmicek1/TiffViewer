@@ -69,9 +69,10 @@ class DrawingPointsWidget(qg.QWidget):
             s = self.Slab(0.0, 0.0, rectWidth, rectHeight, dfentry=slab)
             xpos = slab.x * xfactor / self.browser.stack.dx + xtranslate
             ypos = slab.y * yfactor / self.browser.stack.dy + ytranslate
-            s.setPos(xpos, ypos)
+            s.setPos(xpos - rectWidth/2, ypos - rectHeight/2)
             s.setPen(slab_pen)
             s.setBrush(slab_brush)
+            s.setZValue(s.zValue() + 1)
             s.hide()
 
             if slab.z not in self.slabs:
@@ -110,11 +111,12 @@ class DrawingPointsWidget(qg.QWidget):
 
         for node in self.browser.stack.node_db.dframe.itertuples():
             n = self.Node(0.0, 0.0, rectWidth, rectHeight, dfentry=node)
-            n.setPos(node.x * xfactor / self.browser.stack.dx +
-                     xtranslate, node.y * yfactor / self.browser.stack.dy +
-                     ytranslate)
+            xpos = node.x * xfactor / self.browser.stack.dx + xtranslate
+            ypos = node.y * yfactor / self.browser.stack.dy + ytranslate
+            n.setPos(xpos - rectWidth/2, ypos - rectHeight/2)
             n.setPen(node_edge_pen)
             n.setBrush(node_edge_brush)
+            n.setZValue(n.zValue() + 1)
             n.hide()
             if node.z not in self.nodes:
                 self.nodes[node.z] = [n]

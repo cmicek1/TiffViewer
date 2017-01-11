@@ -75,6 +75,7 @@ class MainWindow(qg.QMainWindow):
         valid_funcs[handle](args)
 
     def eventFilter(self, source, event):
+        # TODO: Detect when toolbar is moved, and reposition points appropriately
         if event.type() == qc.QEvent.Wheel or event.type() == qc.QEvent.GraphicsSceneWheel:
             self.wheelEvent(event)
 
