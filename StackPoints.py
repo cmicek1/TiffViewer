@@ -198,9 +198,12 @@ class DrawingPointsWidget(qg.QWidget):
                     if s.dfentry.edgeIdx not in visible_edges:
                         visible_edges.append(s.dfentry.edgeIdx)
                 for idx in visible_edges:
-                    for es in self.edge_segs[idx]:
-                        if es.endpoints[0].isVisible() or es.endpoints[1].isVisible():
-                            es.show()
+                    try:
+                        for es in self.edge_segs[idx]:
+                            if es.endpoints[0].isVisible() or es.endpoints[1].isVisible():
+                                es.show()
+                    except KeyError:
+                        pass
 
             if z in self.nodes:
                 for n in self.nodes[z]:
@@ -211,14 +214,21 @@ class DrawingPointsWidget(qg.QWidget):
     class Node(qg.QGraphicsEllipseItem):
         def __init__(self, *_args, **kwargs):
             super(qg.QGraphicsEllipseItem, self).__init__(*_args)
+            self.setFlag(qg.QGraphicsItem.ItemIsSelectable)
             self.dfentry = None
             if 'dfentry' in kwargs:
                 self.dfentry = kwargs['dfentry']
 
+        def paint(self, painter, option, widget=None):
+            tempop = option
+            tempop.state &= not qg.QStyle.State_Selected
+            # TODO: Change painter here for selection
+            qg.QGraphicsEllipseItem.paint(self, painter, tempop, widget)
+
     class Slab(qg.QGraphicsEllipseItem):
         def __init__(self, *_args, **kwargs):
             super(qg.QGraphicsEllipseItem, self).__init__(*_args)
-
+            self.setFlag(qg.QGraphicsItem.ItemIsSelectable)
             self.dfentry = None
             if 'dfentry' in kwargs:
                 self.dfentry = kwargs['dfentry']
@@ -226,6 +236,7 @@ class DrawingPointsWidget(qg.QWidget):
     class EdgeSegment(qg.QGraphicsLineItem):
         def __init__(self, *_args, **kwargs):
             super(qg.QGraphicsLineItem, self).__init__(*_args)
+            self.setFlag(qg.QGraphicsItem.ItemIsSelectable)
             self.idx = None
             if 'idx' in kwargs:
                 self.idx = kwargs['idx']
