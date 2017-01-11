@@ -66,11 +66,9 @@ class DrawingPointsWidget(qg.QWidget):
         prev_xpos = 0
         prev_ypos = 0
         for slab in self.browser.stack.slab_db.dframe.itertuples():
-            s = self.Slab(0, 0, rectWidth, rectHeight, dfentry=slab)
-            xpos = int(slab.x * xfactor / self.browser.stack.dx +
-                       xtranslate)
-            ypos = int(slab.y * yfactor / self.browser.stack.dy +
-                       ytranslate)
+            s = self.Slab(0.0, 0.0, rectWidth, rectHeight, dfentry=slab)
+            xpos = slab.x * xfactor / self.browser.stack.dx + xtranslate
+            ypos = slab.y * yfactor / self.browser.stack.dy + ytranslate
             s.setPos(xpos, ypos)
             s.setPen(slab_pen)
             s.setBrush(slab_brush)
@@ -91,12 +89,10 @@ class DrawingPointsWidget(qg.QWidget):
                 if slab.edgeIdx == prev_slab.dfentry.edgeIdx and (
                             slab.i == prev_slab.dfentry.i + 1):
                     # Connect
-                    es = self.EdgeSegment(0, 0, 0, 0, idx=slab.edgeIdx)
+                    es = self.EdgeSegment(0.0, 0.0, 0.0, 0.0, idx=slab.edgeIdx)
                     es.endpoints = [prev_slab, s]
-                    xpos = int(slab.x * xfactor / self.browser.stack.dx +
-                               xtranslate)
-                    ypos = int(slab.y * yfactor / self.browser.stack.dy +
-                               ytranslate)
+                    xpos = slab.x * xfactor / self.browser.stack.dx + xtranslate
+                    ypos = slab.y * yfactor / self.browser.stack.dy + ytranslate
                     es.setLine(prev_xpos, prev_ypos, xpos, ypos)
                     es.setPen(node_edge_pen)
                     es.hide()
@@ -113,10 +109,10 @@ class DrawingPointsWidget(qg.QWidget):
         node_edge_pen.setWidth(7)
 
         for node in self.browser.stack.node_db.dframe.itertuples():
-            n = self.Node(0, 0, rectWidth, rectHeight, dfentry=node)
-            n.setPos(int(node.x * xfactor / self.browser.stack.dx +
-                     xtranslate), int(node.y * yfactor / self.browser.stack.dy +
-                     ytranslate))
+            n = self.Node(0.0, 0.0, rectWidth, rectHeight, dfentry=node)
+            n.setPos(node.x * xfactor / self.browser.stack.dx +
+                     xtranslate, node.y * yfactor / self.browser.stack.dy +
+                     ytranslate)
             n.setPen(node_edge_pen)
             n.setBrush(node_edge_brush)
             n.hide()
@@ -178,15 +174,16 @@ class DrawingPointsWidget(qg.QWidget):
             for k in self.slabs:
                 for s in self.slabs[k]:
                     s.setPos(s.pos() / self.cur_scale * scale)
-                    # Handle error case of edge with one slab
-                    try:
-                        for es in self.edge_segs[s.dfentry.edgeIdx]:
-                            temp = es.line()
-                            temp.setP1(es.line().p1() / self.cur_scale * scale)
-                            temp.setP2(es.line().p2() / self.cur_scale * scale)
-                            es.setLine(temp)
-                    except KeyError:
-                        pass
+            for idx in self.edge_segs:
+                # Handle error case of edge with one slab
+                try:
+                    for es in self.edge_segs[idx]:
+                        temp = es.line()
+                        temp.setPoints(es.line().p1() / self.cur_scale * scale,
+                                       es.line().p2() / self.cur_scale * scale)
+                        es.setLine(temp)
+                except KeyError:
+                    pass
             for k in self.nodes:
                 for n in self.nodes[k]:
                     n.setPos(n.pos() / self.cur_scale * scale)
