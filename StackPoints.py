@@ -290,13 +290,38 @@ class DrawingPointsWidget(qg.QWidget):
         item to its corresponding DataFrame entry.
         """
         def __init__(self, *_args, **kwargs):
+            """
+            Initializer for Node class. Uses _args to call initializer of superclass (QGraphicsEllipseItem),
+            and accepts the keyword argument 'dfentry', which is the Node's corresponding DataFrame entry.
+
+            :param _args: Default positional arguments for the QGraphicsEllipseItem initializer (unmodified)
+            :param kwargs: Accepted keyword arguments (currently 'dfentry', which is assigned to the instance's
+                           'dfentry' attribute).
+
+            :type _args: list
+            :type kwargs: dict[str, pandas.DataFrame]
+            """
             super(qg.QGraphicsEllipseItem, self).__init__(*_args)
             self.setFlag(qg.QGraphicsItem.ItemIsSelectable)
             self.dfentry = None
             if 'dfentry' in kwargs:
                 self.dfentry = kwargs['dfentry']
 
-        def paint(self, painter, option, widget=None):
+        def paint(self, painter, option, widget=0):
+            """
+            Overloaded function from QGraphicsItem; determines how the item should be painted onto the screen.
+
+            :param painter: A QPainter object, which manages low-level painting functions and includes a QPen and
+                            QBrush for managing color, fill, and line style, among others.
+            :param option: A QStyleOptionGraphicsItem instance Qt uses to store the options used when drawing the item.
+            :param widget: The QWidget to paint on
+
+            :type painter: PyQt4.QtGui.QPainter
+            :type option: PyQt4.QtGui.QStyleOptionGraphicsItem
+            :type widget: PyQt4.QtGui.QWidget
+
+            :return: None
+            """
             tempop = option
             tempop.state &= not qg.QStyle.State_Selected
             # TODO: Change painter here for selection
@@ -309,6 +334,17 @@ class DrawingPointsWidget(qg.QWidget):
         item to its corresponding DataFrame entry.
         """
         def __init__(self, *_args, **kwargs):
+            """
+            Initializer for Slab class. Uses _args to call initializer of superclass (QGraphicsEllipseItem),
+            and accepts the keyword argument 'dfentry', which is the Slab's corresponding DataFrame entry.
+
+            :param _args: Default positional arguments for the QGraphicsEllipseItem initializer (unmodified)
+            :param kwargs: Accepted keyword arguments (currently 'dfentry', which is assigned to the instance's
+                           'dfentry' attribute).
+
+            :type _args: list
+            :type kwargs: dict[str, pandas.DataFrame]
+            """
             super(qg.QGraphicsEllipseItem, self).__init__(*_args)
             self.setFlag(qg.QGraphicsItem.ItemIsSelectable)
             self.dfentry = None
@@ -317,10 +353,21 @@ class DrawingPointsWidget(qg.QWidget):
 
     class EdgeSegment(qg.QGraphicsLineItem):
         """
-        Class for edge segments in the scene derived from QGraphics:LineItem. Holds each segment's edge index ans its
+        Class for edge segments in the scene derived from QGraphics:LineItem. Holds each segment's edge index and its
         two Slab endpoints.
         """
         def __init__(self, *_args, **kwargs):
+            """
+            Initializer for EdgeSegment class. Uses _args to call initializer of superclass (QGraphicsLineItem),
+            and accepts the keyword argument 'idx', representing its edge index.
+
+            :param _args: Default positional arguments for the QGraphicsEllipseItem initializer (unmodified)
+            :param kwargs: Accepted keyword arguments (currently 'idx', which is assigned to the instance's
+                           'idx' attribute).
+
+            :type _args: list
+            :type kwargs: dict[str, int]
+            """
             super(qg.QGraphicsLineItem, self).__init__(*_args)
             self.setFlag(qg.QGraphicsItem.ItemIsSelectable)
             self.idx = None
