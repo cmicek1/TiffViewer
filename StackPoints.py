@@ -117,12 +117,12 @@ class DrawingPointsWidget(qg.QWidget):
         prev_xpos = 0
         prev_ypos = 0
         for slab in self.browser.stack.slab_db.dframe.itertuples():
-            s = self.Slab(0.0, 0.0, rectWidth, rectHeight, dfentry=slab)
+            s = self.Slab(0.0, 0.0, rectWidth, rectHeight, dfentry=slab, widget=self)
             xpos = slab.x * xfactor / self.browser.stack.dx + xtranslate
             ypos = slab.y * yfactor / self.browser.stack.dy + ytranslate
             s.setPos(xpos - rectWidth/2, ypos - rectHeight/2)  # Note: Coordinates for QGraphicsEllipseItems are the
-                                                               # upper-left corner of the item's bounding box,
-                                                               # so need to translate to center
+            # upper-left corner of the item's bounding box,
+            # so need to translate to center
             s.setPen(slab_pen)
             s.setBrush(slab_brush)
             s.setZValue(s.zValue() + 1)
@@ -144,7 +144,7 @@ class DrawingPointsWidget(qg.QWidget):
                 if slab.edgeIdx == prev_slab.dfentry.edgeIdx and (
                             slab.i == prev_slab.dfentry.i + 1):
                     # Connect
-                    es = self.EdgeSegment(0.0, 0.0, 0.0, 0.0, idx=slab.edgeIdx)
+                    es = self.EdgeSegment(0.0, 0.0, 0.0, 0.0, idx=slab.edgeIdx, widget=self)
                     es.endpoints = [prev_slab, s]
                     xpos = slab.x * xfactor / self.browser.stack.dx + xtranslate
                     ypos = slab.y * yfactor / self.browser.stack.dy + ytranslate
@@ -165,7 +165,7 @@ class DrawingPointsWidget(qg.QWidget):
         node_edge_pen.setWidth(7)
 
         for node in self.browser.stack.node_db.dframe.itertuples():
-            n = self.Node(0.0, 0.0, rectWidth, rectHeight, dfentry=node)
+            n = self.Node(0.0, 0.0, rectWidth, rectHeight, dfentry=node, widget=self)
             xpos = node.x * xfactor / self.browser.stack.dx + xtranslate
             ypos = node.y * yfactor / self.browser.stack.dy + ytranslate
             n.setPos(xpos - rectWidth/2, ypos - rectHeight/2)
@@ -244,7 +244,7 @@ class DrawingPointsWidget(qg.QWidget):
         # Check scale out of scope so the current stored scale can be modified
         scale = float(self.browser.splitter.width()) / self.browser.stack.imarray.shape[1]
         if resize:  # Scale all items (both visible and invisible) via a linear iteration through each member dict,
-                    # so scales of all items are easy to keep track of
+            # so scales of all items are easy to keep track of
             for k in self.slabs:
                 for s in self.slabs[k]:
                     s.setPos(s.pos() / self.cur_scale * scale)
@@ -284,6 +284,7 @@ class DrawingPointsWidget(qg.QWidget):
 
         self.cur_scale = scale
 
+    # TODO: Keep selection when scrolling
     class Node(qg.QGraphicsEllipseItem):
         """
         Class for nodes in the scene derived from QGraphicsEllipseItem. Useful for event handling and linking each
@@ -306,6 +307,8 @@ class DrawingPointsWidget(qg.QWidget):
             self.dfentry = None
             if 'dfentry' in kwargs:
                 self.dfentry = kwargs['dfentry']
+            if 'widget' in kwargs:
+                self.widget = kwargs['widget']
 
         def paint(self, painter, option, widget=0):
             """
@@ -322,12 +325,24 @@ class DrawingPointsWidget(qg.QWidget):
 
             :return: None
             """
+            # Remove default Qt selection behavior
             tempop = option
             tempop.state &= not qg.QStyle.State_Selected
-            # TODO: Change painter here for selection
-            # painter = qg.QGraphicsItem
             qg.QGraphicsEllipseItem.paint(self, painter, tempop, widget)
 
+        def itemChange(self, change, value):
+            if change == qg.QGraphicsItem.ItemSelectedChange:
+                # Note: Need to use '==' operator for condition to evaluate correctly. (Qt will cast the QVariant
+                # 'value' to a boolean when evaluating only if the boolean equivalent operator is used.)
+                if value == 1:
+                    self.setBrush(qc.Qt.yellow)
+                    self.setPen(qg.QPen(qc.Qt.yellow, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                else:
+                    self.setBrush(qc.Qt.red)
+                    self.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+            return qg.QGraphicsEllipseItem.itemChange(self, change, value)
+
+    # TODO: Override setSelected() method for Slabs and EdgeSegments to bypass infinite recursion
     class Slab(qg.QGraphicsEllipseItem):
         """
         Class for slabs in the scene derived from QGraphicsEllipseItem. Useful for event handling and linking each
@@ -350,6 +365,43 @@ class DrawingPointsWidget(qg.QWidget):
             self.dfentry = None
             if 'dfentry' in kwargs:
                 self.dfentry = kwargs['dfentry']
+            if 'widget' in kwargs:
+                self.widget = kwargs['widget']
+
+        def paint(self, painter, option, widget=0):
+            """
+            Overloaded function from QGraphicsItem; determines how the item should be painted onto the screen.
+
+            :param painter: A QPainter object, which manages low-level painting functions and includes a QPen and
+                            QBrush for managing color, fill, and line style, among others.
+            :param option: A QStyleOptionGraphicsItem instance Qt uses to store the options used when drawing the item.
+            :param widget: The QWidget to paint on
+
+            :type painter: PyQt4.QtGui.QPainter
+            :type option: PyQt4.QtGui.QStyleOptionGraphicsItem
+            :type widget: PyQt4.QtGui.QWidget
+
+            :return: None
+            """
+            # Remove default Qt selection behavior
+            tempop = option
+            tempop.state &= not qg.QStyle.State_Selected
+            qg.QGraphicsEllipseItem.paint(self, painter, tempop, widget)
+
+        def itemChange(self, change, value):
+            if change == qg.QGraphicsItem.ItemSelectedChange:
+                # Note: Need to use '==' operator for condition to evaluate correctly. (Qt will cast the QVariant
+                # 'value' to a boolean when evaluating only if the boolean 'is equivalent' operator is used.)
+                if value == 1:
+                    self.setBrush(qg.QColor(255, 105, 255))
+                    self.setPen(qg.QPen(qg.QColor(255, 105, 255), 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    for es in self.widget.edge_segs[self.dfentry.edgeIdx]:
+                        if not es.isSelected():
+                            es.setSelected(True)
+                else:
+                    self.setBrush(qc.Qt.cyan)
+                    self.setPen(qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
+            return qg.QGraphicsEllipseItem.itemChange(self, change, value)
 
     class EdgeSegment(qg.QGraphicsLineItem):
         """
@@ -373,4 +425,45 @@ class DrawingPointsWidget(qg.QWidget):
             self.idx = None
             if 'idx' in kwargs:
                 self.idx = kwargs['idx']
+            if 'widget' in kwargs:
+                self.widget = kwargs['widget']
+
             self.endpoints = []
+
+        def paint(self, painter, option, widget=0):
+            """
+            Overloaded function from QGraphicsItem; determines how the item should be painted onto the screen.
+
+            :param painter: A QPainter object, which manages low-level painting functions and includes a QPen and
+                            QBrush for managing color, fill, and line style, among others.
+            :param option: A QStyleOptionGraphicsItem instance Qt uses to store the options used when drawing the item.
+            :param widget: The QWidget to paint on
+
+            :type painter: PyQt4.QtGui.QPainter
+            :type option: PyQt4.QtGui.QStyleOptionGraphicsItem
+            :type widget: PyQt4.QtGui.QWidget
+
+            :return: None
+            """
+            # Remove default Qt selection behavior
+            tempop = option
+            tempop.state &= not qg.QStyle.State_Selected
+            qg.QGraphicsLineItem.paint(self, painter, tempop, widget)
+
+        def itemChange(self, change, value):
+            if change == qg.QGraphicsItem.ItemSelectedChange:
+                # Note: Need to use '==' operator for condition to evaluate correctly. (Qt will cast the QVariant
+                # 'value' to a boolean when evaluating only if the boolean equivalent operator is used.)
+                if value == 1:
+                    for es in self.widget.edge_segs[self.idx]:
+                        es.setPen(qg.QPen(qg.QColor(255, 105, 255), 3, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    for s in self.endpoints:
+                        s.setBrush(qg.QColor(255, 105, 255))
+                        s.setPen(qg.QPen(qg.QColor(255, 105, 255), 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                else:
+                    for es in self.widget.edge_segs[self.idx]:
+                        es.setPen(qg.QPen(qc.Qt.red, 1, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    for s in self.endpoints:
+                        s.setBrush(qc.Qt.cyan)
+                        s.setPen(qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
+            return qg.QGraphicsLineItem.itemChange(self, change, value)
