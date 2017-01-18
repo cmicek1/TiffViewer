@@ -223,15 +223,19 @@ class DrawingPointsWidget(qg.QWidget):
         if prev is not None:
             if prev in self.slabs:
                 for s in self.slabs[prev]:
-                    s.hide()
+                    if not self.edges[s.dfentry.edgeIdx].isSelected():
+                        s.hide()
                     if s.dfentry.edgeIdx in self.edge_segs:
                         for es in self.edge_segs[s.dfentry.edgeIdx]:
-                            if es.endpoints[0].dfentry.z <= prev and es.endpoints[1].dfentry.z <= prev:
+                            if es.endpoints[0].dfentry.z <= prev and es.endpoints[1].dfentry.z <= prev and not (
+                                self.edges[es.idx].isSelected()
+                            ):
                                 es.hide()
 
             if prev in self.nodes:
                 for n in self.nodes[prev]:
-                    n.hide()
+                    if not n.isSelected():
+                        n.hide()
 
         # Calculate max slice of range
         d2 = int(self.browser.z + offset)
@@ -244,15 +248,19 @@ class DrawingPointsWidget(qg.QWidget):
         if nxt is not None:
             if nxt in self.slabs:
                 for s in self.slabs[nxt]:
-                    s.hide()
+                    if not self.edges[s.dfentry.edgeIdx].isSelected():
+                        s.hide()
                     if s.dfentry.edgeIdx in self.edge_segs:
                         for es in self.edge_segs[s.dfentry.edgeIdx]:
-                            if es.endpoints[0].dfentry.z >= nxt and es.endpoints[1].dfentry.z >= nxt:
+                            if es.endpoints[0].dfentry.z >= nxt and es.endpoints[1].dfentry.z >= nxt and not (
+                                self.edges[es.idx].isSelected()
+                            ):
                                 es.hide()
 
             if nxt in self.nodes:
                 for n in self.nodes[nxt]:
-                    n.hide()
+                    if not n.isSelected():
+                        n.hide()
 
         # Check scale out of scope so the current stored scale can be modified
         scale = float(self.browser.splitter.width()) / self.browser.stack.imarray.shape[1]
