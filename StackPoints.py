@@ -518,12 +518,16 @@ class DrawingPointsWidget(qg.QWidget):
             for es in self.edge_segs:
                 if selected:
                     es.setPen(qg.QPen(qg.QColor(255, 105, 255), 3, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    if not es.isVisible():
+                        es.show()
                 else:
                     es.setPen(qg.QPen(qc.Qt.red, 1, qc.Qt.SolidLine, qc.Qt.RoundCap))
             for s in self.slabs:
                 if selected:
                     s.setBrush(qg.QColor(255, 105, 255))
                     s.setPen(qg.QPen(qg.QColor(255, 105, 255), 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    if not s.isVisible():
+                        s.show()
                 else:
                     s.setBrush(qc.Qt.cyan)
                     s.setPen(qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
