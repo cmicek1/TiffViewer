@@ -25,6 +25,7 @@ class DrawingPointsWidget(qg.QWidget):
         self.nodes = {}
         self.slabs = {}
         self.edge_segs = {}
+        self.edges = {}
 
         # Want to pass reference to keep z up-to-date
         self.browser = browser
@@ -160,6 +161,18 @@ class DrawingPointsWidget(qg.QWidget):
                 prev_xpos = xpos
                 prev_ypos = ypos
                 time += 1
+
+        for edge in self.browser.stack.edge_db.dframe.itertuples():
+            idx = edge.i
+            try:
+                e = self.Edge(widget=self, idx=idx, dfentry=edge, edge_segs=self.edge_segs[idx])
+                for seg in e.edge_segs:
+                    for ep in seg.endpoints:
+                        if ep not in e.slabs:
+                            e.slabs.append(ep)
+                self.edges[idx] = e
+            except KeyError:
+                pass
 
         # Change pen to Node specs
         node_edge_pen.setWidth(7)
@@ -342,7 +355,6 @@ class DrawingPointsWidget(qg.QWidget):
                     self.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
             return qg.QGraphicsEllipseItem.itemChange(self, change, value)
 
-    # TODO: Override setSelected() method for Slabs and EdgeSegments to bypass infinite recursion
     class Slab(qg.QGraphicsEllipseItem):
         """
         Class for slabs in the scene derived from QGraphicsEllipseItem. Useful for event handling and linking each
@@ -393,14 +405,9 @@ class DrawingPointsWidget(qg.QWidget):
                 # Note: Need to use '==' operator for condition to evaluate correctly. (Qt will cast the QVariant
                 # 'value' to a boolean when evaluating only if the boolean 'is equivalent' operator is used.)
                 if value == 1:
-                    self.setBrush(qg.QColor(255, 105, 255))
-                    self.setPen(qg.QPen(qg.QColor(255, 105, 255), 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
-                    for es in self.widget.edge_segs[self.dfentry.edgeIdx]:
-                        if not es.isSelected():
-                            es.setSelected(True)
+                    self.widget.edges[self.dfentry.edgeIdx].setSelect(True)
                 else:
-                    self.setBrush(qc.Qt.cyan)
-                    self.setPen(qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    self.widget.edges[self.dfentry.edgeIdx].setSelect(False)
             return qg.QGraphicsEllipseItem.itemChange(self, change, value)
 
     class EdgeSegment(qg.QGraphicsLineItem):
@@ -455,15 +462,44 @@ class DrawingPointsWidget(qg.QWidget):
                 # Note: Need to use '==' operator for condition to evaluate correctly. (Qt will cast the QVariant
                 # 'value' to a boolean when evaluating only if the boolean equivalent operator is used.)
                 if value == 1:
-                    for es in self.widget.edge_segs[self.idx]:
-                        es.setPen(qg.QPen(qg.QColor(255, 105, 255), 3, qc.Qt.SolidLine, qc.Qt.RoundCap))
-                    for s in self.endpoints:
-                        s.setBrush(qg.QColor(255, 105, 255))
-                        s.setPen(qg.QPen(qg.QColor(255, 105, 255), 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    self.widget.edges[self.idx].setSelect(True)
                 else:
-                    for es in self.widget.edge_segs[self.idx]:
-                        es.setPen(qg.QPen(qc.Qt.red, 1, qc.Qt.SolidLine, qc.Qt.RoundCap))
-                    for s in self.endpoints:
-                        s.setBrush(qc.Qt.cyan)
-                        s.setPen(qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    self.widget.edges[self.idx].setSelect(False)
             return qg.QGraphicsLineItem.itemChange(self, change, value)
+
+    class Edge:
+        def __init__(self, **kwargs):
+            self.widget = None
+            self.idx = None
+            self.dfentry = None
+            self.edge_segs = []
+            self.slabs = []
+            self._selected = False
+            if 'widget' in kwargs:
+                self.widget = kwargs['widget']
+            if 'idx' in kwargs:
+                self.idx = kwargs['idx']
+            if 'dfentry' in kwargs:
+                self.dfentry = kwargs['dfentry']
+            if 'edge_segs' in kwargs:
+                self.edge_segs = kwargs['edge_segs']
+            if 'slabs' in kwargs:
+                self.slabs = kwargs['slabs']
+
+        def setSelect(self, selected):
+            self._selected = selected
+            for es in self.edge_segs:
+                if selected:
+                    es.setPen(qg.QPen(qg.QColor(255, 105, 255), 3, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                else:
+                    es.setPen(qg.QPen(qc.Qt.red, 1, qc.Qt.SolidLine, qc.Qt.RoundCap))
+            for s in self.slabs:
+                if selected:
+                    s.setBrush(qg.QColor(255, 105, 255))
+                    s.setPen(qg.QPen(qg.QColor(255, 105, 255), 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                else:
+                    s.setBrush(qc.Qt.cyan)
+                    s.setPen(qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
+
+        def isSelected(self):
+            return self._selected
