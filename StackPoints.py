@@ -437,6 +437,24 @@ class DrawingPointsWidget(qg.QWidget):
 
             self.endpoints = []
 
+        def shape(self):
+            """
+            Overrides default QGraphicsLineItem implementation to increase the bounds of the line for easier mouse
+            selection.
+
+            :return: path, the path the item's painter will follow to draw the segment
+
+            :rtype: qg.QPainterPath
+            """
+            rect = qc.QRectF(self.line().p1(), self.line().p2()).normalized()
+
+            rect.adjust(-1, -1, 1, 1)
+
+            path = qg.QPainterPath()
+            path.addRect(rect)
+
+            return path
+
         def paint(self, painter, option, widget=0):
             """
             Overloaded function from QGraphicsItem; determines how the item should be painted onto the screen.
@@ -467,7 +485,7 @@ class DrawingPointsWidget(qg.QWidget):
                     self.widget.edges[self.idx].setSelect(False)
             return qg.QGraphicsLineItem.itemChange(self, change, value)
 
-    class Edge:
+    class Edge:  # Could make this an invisible QGraphicsItem if necessary
         def __init__(self, **kwargs):
             self.widget = None
             self.idx = None
@@ -488,6 +506,7 @@ class DrawingPointsWidget(qg.QWidget):
 
         def setSelect(self, selected):
             self._selected = selected
+            # Could possibly toggle component visibility below
             for es in self.edge_segs:
                 if selected:
                     es.setPen(qg.QPen(qg.QColor(255, 105, 255), 3, qc.Qt.SolidLine, qc.Qt.RoundCap))
