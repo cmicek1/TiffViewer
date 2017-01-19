@@ -305,7 +305,6 @@ class DrawingPointsWidget(qg.QWidget):
 
         self.cur_scale = scale
 
-    # TODO: Keep selection when scrolling
     class Node(qg.QGraphicsEllipseItem):
         """
         Class for nodes in the scene derived from QGraphicsEllipseItem. Useful for event handling and linking each
@@ -326,10 +325,34 @@ class DrawingPointsWidget(qg.QWidget):
             super(qg.QGraphicsEllipseItem, self).__init__(*_args)
             self.setFlag(qg.QGraphicsItem.ItemIsSelectable)
             self.dfentry = None
+            self.label = None
             if 'dfentry' in kwargs:
                 self.dfentry = kwargs['dfentry']
+                self.label = self._Label(self)
             if 'widget' in kwargs:
                 self.widget = kwargs['widget']
+
+        class _Label(qg.QGraphicsSimpleTextItem):
+            def __init__(self, *_args):
+                super(qg.QGraphicsSimpleTextItem, self).__init__(*_args)
+                self.line = None
+                if self.parentItem():
+                    parent = self.parentItem()
+                    self.setText("{}/z{}".format(parent.dfentry.i, parent.dfentry.z))
+                    self.setFlags(qg.QGraphicsItem.ItemIsMovable | qg.QGraphicsItem.ItemSendsScenePositionChanges)
+                    self.setFont(qg.QFont('Arial', 9))
+                    self.setBrush(qg.QBrush(qc.Qt.white))
+                    self.setPos(18, -18)
+                    self.line = qg.QGraphicsLineItem(qc.QLineF(parent.pos(), self.pos()), parent)
+                    self.line.setPen(qg.QPen(qc.Qt.white))
+
+            # TODO: Move line to correct position
+            def itemChange(self, change, value):
+                if change == qg.QGraphicsItem.ItemScenePositionHasChanged:
+                    temp = self.line.line()
+                    temp.setP2(value.toPointF())
+                    self.line.setLine(temp)
+                return qg.QGraphicsSimpleTextItem.itemChange(self, change, value)
 
         def paint(self, painter, option, widget=0):
             """
@@ -517,6 +540,7 @@ class DrawingPointsWidget(qg.QWidget):
             if 'slabs' in kwargs:
                 self.slabs = kwargs['slabs']
 
+        # TODO: Make the endpoint nodes red and green
         def setSelect(self, selected):
             self._selected = selected
             # Could possibly toggle component visibility below
