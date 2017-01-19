@@ -219,7 +219,7 @@ class DrawingPointsWidget(qg.QWidget):
             d1 = 0
             prev = None
 
-        # If scrolling down, hide items in previous uppermost visible slice
+        # If scrolling down, hide items in previous uppermost visible slice (if not selected)
         if prev is not None:
             if prev in self.slabs:
                 for s in self.slabs[prev]:
@@ -358,9 +358,12 @@ class DrawingPointsWidget(qg.QWidget):
                 if value == 1:
                     self.setBrush(qc.Qt.yellow)
                     self.setPen(qg.QPen(qc.Qt.yellow, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    self.show()
                 else:
                     self.setBrush(qc.Qt.red)
                     self.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    self.hide()
+                    self.widget.drawPoints()
             return qg.QGraphicsEllipseItem.itemChange(self, change, value)
 
     class Slab(qg.QGraphicsEllipseItem):
@@ -416,6 +419,7 @@ class DrawingPointsWidget(qg.QWidget):
                     self.widget.edges[self.dfentry.edgeIdx].setSelect(True)
                 else:
                     self.widget.edges[self.dfentry.edgeIdx].setSelect(False)
+                    self.widget.drawPoints()
             return qg.QGraphicsEllipseItem.itemChange(self, change, value)
 
     class EdgeSegment(qg.QGraphicsLineItem):
@@ -491,6 +495,7 @@ class DrawingPointsWidget(qg.QWidget):
                     self.widget.edges[self.idx].setSelect(True)
                 else:
                     self.widget.edges[self.idx].setSelect(False)
+                    self.widget.drawPoints()
             return qg.QGraphicsLineItem.itemChange(self, change, value)
 
     class Edge:  # Could make this an invisible QGraphicsItem if necessary
@@ -522,6 +527,7 @@ class DrawingPointsWidget(qg.QWidget):
                         es.show()
                 else:
                     es.setPen(qg.QPen(qc.Qt.red, 1, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    es.hide()
             for s in self.slabs:
                 if selected:
                     s.setBrush(qg.QColor(255, 105, 255))
@@ -531,6 +537,7 @@ class DrawingPointsWidget(qg.QWidget):
                 else:
                     s.setBrush(qc.Qt.cyan)
                     s.setPen(qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    s.hide()
 
         def isSelected(self):
             return self._selected
