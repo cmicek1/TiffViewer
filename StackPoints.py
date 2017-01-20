@@ -27,6 +27,8 @@ class DrawingPointsWidget(qg.QWidget):
         self.edge_segs = {}
         self.edges = {}
 
+        self._nodes_by_idx = {}
+
         # Want to pass reference to keep z up-to-date
         self.browser = browser
         self.scaleFactor = 1  # fraction of total
@@ -162,18 +164,6 @@ class DrawingPointsWidget(qg.QWidget):
                 prev_ypos = ypos
                 time += 1
 
-        for edge in self.browser.stack.edge_db.dframe.itertuples():
-            idx = edge.i
-            try:
-                e = self.Edge(widget=self, idx=idx, dfentry=edge, edge_segs=self.edge_segs[idx])
-                for seg in e.edge_segs:
-                    for ep in seg.endpoints:
-                        if ep not in e.slabs:
-                            e.slabs.append(ep)
-                self.edges[idx] = e
-            except KeyError:
-                pass
-
         # Change pen to Node specs
         node_edge_pen.setWidth(7)
 
@@ -190,7 +180,22 @@ class DrawingPointsWidget(qg.QWidget):
                 self.nodes[node.z] = [n]
             else:
                 self.nodes[node.z].append(n)
+            self._nodes_by_idx[node.i] = n
             self.browser.scene.addItem(n)
+
+        for edge in self.browser.stack.edge_db.dframe.itertuples():
+            idx = edge.i
+            try:
+                e = self.Edge(widget=self, idx=idx, dfentry=edge, edge_segs=self.edge_segs[idx])
+                e.source = self._nodes_by_idx[e.dfentry.sourceIdx]
+                e.target = self._nodes_by_idx[e.dfentry.targetIdx]
+                for seg in e.edge_segs:
+                    for ep in seg.endpoints:
+                        if ep not in e.slabs:
+                            e.slabs.append(ep)
+                self.edges[idx] = e
+            except KeyError:
+                pass
 
     def drawPoints(self, resize=False):
         """
@@ -234,7 +239,12 @@ class DrawingPointsWidget(qg.QWidget):
 
             if prev in self.nodes:
                 for n in self.nodes[prev]:
-                    if not n.isSelected():
+                    eList = n.dfentry.edgeList.split(';')[0:-1]
+                    selected = False
+                    for idx in eList:
+                        if self.edges[int(idx)].isSelected():
+                            selected = True
+                    if not n.isSelected() and not selected:
                         n.hide()
 
         # Calculate max slice of range
@@ -259,7 +269,12 @@ class DrawingPointsWidget(qg.QWidget):
 
             if nxt in self.nodes:
                 for n in self.nodes[nxt]:
-                    if not n.isSelected():
+                    eList = n.dfentry.edgeList.split(';')[0:-1]
+                    selected = False
+                    for idx in eList:
+                        if self.edges[int(idx)].isSelected():
+                            selected = True
+                    if not n.isSelected() and not selected:
                         n.hide()
 
         # Check scale out of scope so the current stored scale can be modified
@@ -302,7 +317,6 @@ class DrawingPointsWidget(qg.QWidget):
             if z in self.nodes:
                 for n in self.nodes[z]:
                     n.show()
-                    n.label.show()
 
         self.cur_scale = scale
 
@@ -355,9 +369,10 @@ class DrawingPointsWidget(qg.QWidget):
                     self.line.setLine(temp)
                 return qg.QGraphicsSimpleTextItem.itemChange(self, change, value)
 
-            def show(self):
-                self.line.show()
-                qg.QGraphicsSimpleTextItem.show(self)
+        def show(self):
+            self.label.show()
+            self.label.line.show()
+            qg.QGraphicsEllipseItem.show(self)
 
         def paint(self, painter, option, widget=0):
             """
@@ -533,6 +548,8 @@ class DrawingPointsWidget(qg.QWidget):
             self.dfentry = None
             self.edge_segs = []
             self.slabs = []
+            self.source = None
+            self.target = None
             self._selected = False
             if 'widget' in kwargs:
                 self.widget = kwargs['widget']
@@ -567,6 +584,23 @@ class DrawingPointsWidget(qg.QWidget):
                     s.setBrush(qc.Qt.cyan)
                     s.setPen(qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
                     s.hide()
+            if selected:
+                self.source.setBrush(qc.Qt.red)
+                self.source.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                self.source.show()
+
+                self.target.setBrush(qc.Qt.green)
+                self.target.setPen(qg.QPen(qc.Qt.green, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                self.target.show()
+
+            else:
+                # self.source.setBrush(qc.Qt.red)
+                # self.source.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                self.source.hide()
+
+                self.target.setBrush(qc.Qt.red)
+                self.target.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                self.target.hide()
 
         def isSelected(self):
             return self._selected
