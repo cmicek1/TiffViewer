@@ -228,22 +228,30 @@ class DrawingPointsWidget(qg.QWidget):
         if prev is not None:
             if prev in self.slabs:
                 for s in self.slabs[prev]:
-                    if not self.edges[s.dfentry.edgeIdx].isSelected():
-                        s.hide()
-                    if s.dfentry.edgeIdx in self.edge_segs:
-                        for es in self.edge_segs[s.dfentry.edgeIdx]:
-                            if es.endpoints[0].dfentry.z <= prev and es.endpoints[1].dfentry.z <= prev and not (
-                                self.edges[es.idx].isSelected()
-                            ):
-                                es.hide()
+                    try:
+                        if not self.edges[s.dfentry.edgeIdx].isSelected():
+                            s.hide()
+                        if s.dfentry.edgeIdx in self.edge_segs:
+                            for es in self.edge_segs[s.dfentry.edgeIdx]:
+                                if es.endpoints[0].dfentry.z <= prev and es.endpoints[1].dfentry.z <= prev and not (
+                                    self.edges[es.idx].isSelected()
+                                ):
+                                    es.hide()
+                    except KeyError:
+                        pass
 
             if prev in self.nodes:
                 for n in self.nodes[prev]:
-                    eList = n.dfentry.edgeList.split(';')[0:-1]
+                    eList = n.dfentry.edgeList
                     selected = False
-                    for idx in eList:
-                        if self.edges[int(idx)].isSelected():
-                            selected = True
+                    if not eList != eList:
+                        eList = eList.split(';')[0:-1]
+                        for idx in eList:
+                            try:
+                                if self.edges[int(idx)].isSelected():
+                                    selected = True
+                            except KeyError:
+                                pass
                     if not n.isSelected() and not selected:
                         n.hide()
 
@@ -258,22 +266,30 @@ class DrawingPointsWidget(qg.QWidget):
         if nxt is not None:
             if nxt in self.slabs:
                 for s in self.slabs[nxt]:
-                    if not self.edges[s.dfentry.edgeIdx].isSelected():
-                        s.hide()
-                    if s.dfentry.edgeIdx in self.edge_segs:
-                        for es in self.edge_segs[s.dfentry.edgeIdx]:
-                            if es.endpoints[0].dfentry.z >= nxt and es.endpoints[1].dfentry.z >= nxt and not (
-                                self.edges[es.idx].isSelected()
-                            ):
-                                es.hide()
+                    try:
+                        if not self.edges[s.dfentry.edgeIdx].isSelected():
+                            s.hide()
+                        if s.dfentry.edgeIdx in self.edge_segs:
+                            for es in self.edge_segs[s.dfentry.edgeIdx]:
+                                if es.endpoints[0].dfentry.z >= nxt and es.endpoints[1].dfentry.z >= nxt and not (
+                                    self.edges[es.idx].isSelected()
+                                ):
+                                    es.hide()
+                    except KeyError:
+                        pass
 
             if nxt in self.nodes:
                 for n in self.nodes[nxt]:
-                    eList = n.dfentry.edgeList.split(';')[0:-1]
+                    eList = n.dfentry.edgeList
                     selected = False
-                    for idx in eList:
-                        if self.edges[int(idx)].isSelected():
-                            selected = True
+                    if not eList != eList:
+                        eList = eList.split(';')[0:-1]
+                        for idx in eList:
+                            try:
+                                if self.edges[int(idx)].isSelected():
+                                    selected = True
+                            except KeyError:
+                                pass
                     if not n.isSelected() and not selected:
                         n.hide()
 
@@ -303,9 +319,14 @@ class DrawingPointsWidget(qg.QWidget):
             visible_edges = []
             if z in self.slabs:
                 for s in self.slabs[z]:
-                    s.show()
-                    if s.dfentry.edgeIdx not in visible_edges:
-                        visible_edges.append(s.dfentry.edgeIdx)
+                    try:  # Faster to handle exceptions than check slabs
+                        _ = self.edge_segs[s.dfentry.edgeIdx]
+                        s.show()
+                        if s.dfentry.edgeIdx not in visible_edges:
+                            visible_edges.append(s.dfentry.edgeIdx)
+                    except KeyError:
+                        pass
+
                 for idx in visible_edges:
                     try:
                         for es in self.edge_segs[idx]:
@@ -562,7 +583,6 @@ class DrawingPointsWidget(qg.QWidget):
             if 'slabs' in kwargs:
                 self.slabs = kwargs['slabs']
 
-        # TODO: Make the endpoint nodes red and green
         def setSelect(self, selected):
             self._selected = selected
             # Could possibly toggle component visibility below
