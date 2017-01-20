@@ -302,6 +302,7 @@ class DrawingPointsWidget(qg.QWidget):
             if z in self.nodes:
                 for n in self.nodes[z]:
                     n.show()
+                    n.label.show()
 
         self.cur_scale = scale
 
@@ -343,16 +344,20 @@ class DrawingPointsWidget(qg.QWidget):
                     self.setFont(qg.QFont('Arial', 9))
                     self.setBrush(qg.QBrush(qc.Qt.white))
                     self.setPos(18, -18)
-                    self.line = qg.QGraphicsLineItem(qc.QLineF(parent.pos(), self.pos()), parent)
+                    self.line = qg.QGraphicsLineItem(qc.QLineF(parent.pos() + qc.QPointF(5, -3), self.pos() +
+                                                               qc.QPointF(-3, 5)), parent)
                     self.line.setPen(qg.QPen(qc.Qt.white))
 
-            # TODO: Move line to correct position
             def itemChange(self, change, value):
                 if change == qg.QGraphicsItem.ItemScenePositionHasChanged:
                     temp = self.line.line()
-                    temp.setP2(value.toPointF())
+                    temp.setP2(self.line.mapFromScene(value.toPointF()) + qc.QPointF(-3, 5))
                     self.line.setLine(temp)
                 return qg.QGraphicsSimpleTextItem.itemChange(self, change, value)
+
+            def show(self):
+                self.line.show()
+                qg.QGraphicsSimpleTextItem.show(self)
 
         def paint(self, painter, option, widget=0):
             """
