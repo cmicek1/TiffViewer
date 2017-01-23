@@ -82,6 +82,8 @@ class MainWindow(qg.QMainWindow):
 
         self.list = qg.QTableView(self)
         self.list.setFont(qg.QFont("Arial", 10))
+        self.list.setSelectionBehavior(qg.QAbstractItemView.SelectRows)
+        # TODO: Remove selection on second click
         self.leftToolbar.addWidget(self.list)
 
     def action_handler(self, handle, *args):
@@ -236,6 +238,10 @@ class MainWindow(qg.QMainWindow):
         if k in zoom_keys:
             self.action_handler('zoom', k, zoomfactor)
 
+    @qc.pyqtSlot(qg.QItemSelection, qg.QItemSelection)
+    def ListSelect(self, selected, deselected):
+        print 'hi'
+
     def _open(self, args):
         """
         Hidden function invoked by the action handler that opens and displays a TiffStack. Called by pressing 'Open'
@@ -264,8 +270,11 @@ class MainWindow(qg.QMainWindow):
         self.image.setColorTable(self.COLORTABLE)
         p = qg.QPixmap.fromImage(self.image)
         self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
+        old = self.list.selectionModel()
         pointModel = pt.PointTable(self.stack.node_db.dframe)
         self.list.setModel(pointModel)
+        self.list.selectionModel().selectionChanged.connect(self.ListSelect)
+        del old
 
         # Create initial overlay and internal representation of graph data
         self.points.initPoints()
