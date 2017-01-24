@@ -27,7 +27,7 @@ class DrawingPointsWidget(qg.QWidget):
         self.edge_segs = {}
         self.edges = {}
 
-        self._nodes_by_idx = {}
+        self.nodes_by_idx = {}
 
         # Want to pass reference to keep z up-to-date
         self.browser = browser
@@ -180,15 +180,15 @@ class DrawingPointsWidget(qg.QWidget):
                 self.nodes[node.z] = [n]
             else:
                 self.nodes[node.z].append(n)
-            self._nodes_by_idx[node.i] = n
+            self.nodes_by_idx[node.i] = n
             self.browser.scene.addItem(n)
 
         for edge in self.browser.stack.edge_db.dframe.itertuples():
             idx = edge.i
             try:
                 e = self.Edge(widget=self, idx=idx, dfentry=edge, edge_segs=self.edge_segs[idx])
-                e.source = self._nodes_by_idx[e.dfentry.sourceIdx]
-                e.target = self._nodes_by_idx[e.dfentry.targetIdx]
+                e.source = self.nodes_by_idx[e.dfentry.sourceIdx]
+                e.target = self.nodes_by_idx[e.dfentry.targetIdx]
                 for seg in e.edge_segs:
                     for ep in seg.endpoints:
                         if ep not in e.slabs:
@@ -416,7 +416,7 @@ class DrawingPointsWidget(qg.QWidget):
             qg.QGraphicsEllipseItem.paint(self, painter, tempop, widget)
 
         def itemChange(self, change, value):
-            if change == qg.QGraphicsItem.ItemSelectedChange:
+            if change == qg.QGraphicsItem.ItemSelectedHasChanged:
                 # Note: Need to use '==' operator for condition to evaluate correctly. (Qt will cast the QVariant
                 # 'value' to a boolean when evaluating only if the boolean equivalent operator is used.)
                 if value == 1:

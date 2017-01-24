@@ -101,9 +101,9 @@ class MainWindow(qg.QMainWindow):
 
         :return: None
         """
-        valid_funcs = {'open': self._open, 'pan': self._pan, 'zoom': self._zoom}
+        valid_funcs = {'open': self._open, 'pan': self._pan, 'zoom': self._zoom, '_node_select': self._node_select}
 
-        valid_funcs[handle](args)
+        valid_funcs[handle](*args)
 
     def eventFilter(self, watched, event):
         """
@@ -238,11 +238,34 @@ class MainWindow(qg.QMainWindow):
         if k in zoom_keys:
             self.action_handler('zoom', k, zoomfactor)
 
-    @qc.pyqtSlot(qg.QItemSelection, qg.QItemSelection)
-    def ListSelect(self, selected, deselected):
-        print 'hi'
+    def _node_select(self, *args):
+        if len(args) == 1:
+            node = args[0]
+            cur_model = self.list.selectionModel()
+            cur_model.select(qg.QItemSelection(cur_model.index(node.dfentry.i, 0), qg.QItemSelectionModel.Rows))
 
-    def _open(self, args):
+        if len(args) == 2:
+            selected = args[0]
+            deselected = args[1]
+
+            prev_row = None
+            for node in selected.indexes():
+                if node.row() != prev_row:
+                    prev_row = node.row()
+                    n = self.points.nodes_by_idx[node.row()]
+                    n.show()
+                    if not n.isSelected():
+                        n.setSelected(True)
+
+            prev_row = None
+            for node in deselected.indexes():
+                if node.row() != prev_row:
+                    prev_row = node.row()
+                    n = self.points.nodes_by_idx[node.row()]
+                    if not n.isSelected():
+                        n.setSelected(False)
+
+    def _open(self, *args):
         """
         Hidden function invoked by the action handler that opens and displays a TiffStack. Called by pressing 'Open'
         in the 'File' menu of the GUI.
@@ -273,14 +296,15 @@ class MainWindow(qg.QMainWindow):
         old = self.list.selectionModel()
         pointModel = pt.PointTable(self.stack.node_db.dframe)
         self.list.setModel(pointModel)
-        self.list.selectionModel().selectionChanged.connect(self.ListSelect)
+        self.list.selectionModel().selectionChanged.connect(lambda selected, deselected, func=self.action_handler: func(
+            '_node_select', selected, deselected))
         del old
 
         # Create initial overlay and internal representation of graph data
         self.points.initPoints()
         self.points.drawPoints()
 
-    def _pan(self, args):
+    def _pan(self, *args):
         """
         Hidden function invoked by the action handler that pans the current view of the open TiffStack. Called by
         pressing any of the arrow keys; the view will pan in the respective direction. Also moves the view back to
@@ -308,7 +332,7 @@ class MainWindow(qg.QMainWindow):
                 print('reset image to full view and center')
                 self.view.move(0, 0)
 
-    def _zoom(self, args):
+    def _zoom(self, *args):
         """
         Hidden function invoked by the action handler that zooms the current view of the open TiffStack with respect
         to the current mouse position, or returns the view to its initial size. Called by pressing the plus, minus, and
