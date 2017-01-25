@@ -423,11 +423,13 @@ class DrawingPointsWidget(qg.QWidget):
                     self.setBrush(qc.Qt.yellow)
                     self.setPen(qg.QPen(qc.Qt.yellow, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
                     self.show()
+                    self.widget.browser.action_handler('_node_select', self)
                 else:
                     self.setBrush(qc.Qt.red)
                     self.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
                     self.hide()
                     self.widget.drawPoints()
+                    self.widget.browser.list.selectionModel().clear()
             return qg.QGraphicsEllipseItem.itemChange(self, change, value)
 
     class Slab(qg.QGraphicsEllipseItem):

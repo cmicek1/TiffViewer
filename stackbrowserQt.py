@@ -241,8 +241,9 @@ class MainWindow(qg.QMainWindow):
     def _node_select(self, *args):
         if len(args) == 1:
             node = args[0]
-            cur_model = self.list.selectionModel()
-            cur_model.select(qg.QItemSelection(cur_model.index(node.dfentry.i, 0), qg.QItemSelectionModel.Rows))
+            cur_model = self.list.model()
+            self.list.selectionModel().select(cur_model.index(node.dfentry.i, 0),
+                                              qg.QItemSelectionModel.Select | qg.QItemSelectionModel.Rows)
 
         if len(args) == 2:
             selected = args[0]
@@ -262,7 +263,7 @@ class MainWindow(qg.QMainWindow):
                 if node.row() != prev_row:
                     prev_row = node.row()
                     n = self.points.nodes_by_idx[node.row()]
-                    if not n.isSelected():
+                    if n.isSelected():
                         n.setSelected(False)
 
     def _open(self, *args):
@@ -359,6 +360,7 @@ class MainWindow(qg.QMainWindow):
             new_pos = self.view.mapToScene(self.view.mapFromGlobal(qg.QCursor.pos()))
             delta = new_pos - old_pos
             self.view.translate(delta.x(), delta.y())
+        # TODO: Fix incorrect view size when zooming out
         if key == qc.Qt.Key_Minus:  # Zoom out
             self.scale /= factor
             self.view.scale(1.0/factor, 1.0/factor)
