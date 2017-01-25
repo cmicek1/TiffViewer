@@ -86,7 +86,7 @@ class MainWindow(qg.QMainWindow):
         # TODO: Remove selection on second click
         self.leftToolbar.addWidget(self.list)
 
-    def action_handler(self, handle, *args):
+    def action_handler(self, handle, *args, **kwargs):
         """
         Custom universal handler for valid hidden functions. Uses a dictionary associating keywords with their
         respective functions, and passes along necessary arguments for execution. Useful for both utility functions
@@ -103,7 +103,7 @@ class MainWindow(qg.QMainWindow):
         """
         valid_funcs = {'open': self._open, 'pan': self._pan, 'zoom': self._zoom, '_node_select': self._node_select}
 
-        valid_funcs[handle](*args)
+        valid_funcs[handle](*args, **kwargs)
 
     def eventFilter(self, watched, event):
         """
@@ -238,12 +238,20 @@ class MainWindow(qg.QMainWindow):
         if k in zoom_keys:
             self.action_handler('zoom', k, zoomfactor)
 
-    def _node_select(self, *args):
+    def _node_select(self, *args, **kwargs):
+        deselect = False
+        if 'deselect' in kwargs:
+            deselect = kwargs['deselect']
+
         if len(args) == 1:
             node = args[0]
             cur_model = self.list.model()
-            self.list.selectionModel().select(cur_model.index(node.dfentry.i, 0),
-                                              qg.QItemSelectionModel.Select | qg.QItemSelectionModel.Rows)
+            if not deselect:
+                self.list.selectionModel().select(cur_model.index(node.dfentry.i, 0),
+                                                  qg.QItemSelectionModel.Select | qg.QItemSelectionModel.Rows)
+            else:
+                self.list.selectionModel().select(cur_model.index(node.dfentry.i, 0),
+                                                  qg.QItemSelectionModel.Deselect | qg.QItemSelectionModel.Rows)
 
         if len(args) == 2:
             selected = args[0]
@@ -266,7 +274,7 @@ class MainWindow(qg.QMainWindow):
                     if n.isSelected():
                         n.setSelected(False)
 
-    def _open(self, *args):
+    def _open(self, *args, **kwargs):
         """
         Hidden function invoked by the action handler that opens and displays a TiffStack. Called by pressing 'Open'
         in the 'File' menu of the GUI.
@@ -305,7 +313,7 @@ class MainWindow(qg.QMainWindow):
         self.points.initPoints()
         self.points.drawPoints()
 
-    def _pan(self, *args):
+    def _pan(self, *args, **kwargs):
         """
         Hidden function invoked by the action handler that pans the current view of the open TiffStack. Called by
         pressing any of the arrow keys; the view will pan in the respective direction. Also moves the view back to
@@ -333,7 +341,7 @@ class MainWindow(qg.QMainWindow):
                 print('reset image to full view and center')
                 self.view.move(0, 0)
 
-    def _zoom(self, *args):
+    def _zoom(self, *args, **kwargs):
         """
         Hidden function invoked by the action handler that zooms the current view of the open TiffStack with respect
         to the current mouse position, or returns the view to its initial size. Called by pressing the plus, minus, and
