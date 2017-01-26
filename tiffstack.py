@@ -1,3 +1,4 @@
+from __future__ import division
 import os
 import tifffile as tf
 import Tkinter as Tk
@@ -81,6 +82,17 @@ class TiffStack:
                     self.__dict__[attr] = n
 
     def get_slice(self, z):
+        """
+        Returns the stack slice at the requested z-value
+
+        :param z: The depth of the stack slice being requested
+
+        :type z: int
+
+        :return: The requested slice
+
+        :rtype: numpy.ndarray[][][int]
+        """
         if 0 <= z <= self.maxz:
             return self.imarray[z]
 
@@ -120,6 +132,28 @@ class TiffStack:
         g.write_graphml(self.fname.split('_ch')[0] + '.graphml')
 
         return g
+
+
+def adjust_contrast(stack_slice, new_min, new_max):
+    """
+    Convenience function that performs contrast stretching on a single slice of the stack. Stretches the image
+    histogram to fall within the privided minimum and maximum intensities.
+
+    :param stack_slice: An unaltered slice from the original stack
+    :param new_min: The new minimum intensity
+    :param new_max: The new maximum intensity
+
+    :type stack_slice: numpy.array[][][int]
+    :type new_min: int
+    :type new_max: int
+
+    :return: The requested slice with adjusted contrast
+    :rtype: numpy.ndarray[][][int]
+    """
+    old_min = stack_slice.min()
+    old_max = stack_slice.max()
+    return ((stack_slice - old_min) * (new_max - new_min) / (old_max - old_max) + (
+        new_min)).astype('uint8')
 
 
 def new():

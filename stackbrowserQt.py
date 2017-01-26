@@ -32,6 +32,8 @@ class MainWindow(qg.QMainWindow):
         self.z = None
         self.scale = 1.0
         self.image = None
+        self._min_intensity = 7
+        self._max_intensity = 255
         self.COLORTABLE = []
         # Set default color table for 8-bit images
         for i in range(256):
@@ -208,6 +210,7 @@ class MainWindow(qg.QMainWindow):
             # self.label.setText("Total Steps: "+QString.number(self.x))
 
             a = self.stack.get_slice(self.z)
+            a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
             self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
             self.image.setColorTable(self.COLORTABLE)
             self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
@@ -298,6 +301,7 @@ class MainWindow(qg.QMainWindow):
         # Start at slice 0
         self.z = 0
         a = self.stack.get_slice(0)
+        a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
         self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
         self.image.setColorTable(self.COLORTABLE)
         p = qg.QPixmap.fromImage(self.image)
