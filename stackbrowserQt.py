@@ -85,7 +85,6 @@ class MainWindow(qg.QMainWindow):
         self.list = qg.QTableView(self)
         self.list.setFont(qg.QFont("Arial", 10))
         self.list.setSelectionBehavior(qg.QAbstractItemView.SelectRows)
-        # TODO: Remove selection on second click
         self.leftToolbar.addWidget(self.list)
 
     def action_handler(self, handle, *args, **kwargs):

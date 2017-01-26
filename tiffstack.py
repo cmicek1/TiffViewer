@@ -1,4 +1,3 @@
-from __future__ import division
 import os
 import tifffile as tf
 import Tkinter as Tk
@@ -150,10 +149,9 @@ def adjust_contrast(stack_slice, new_min, new_max):
     :return: The requested slice with adjusted contrast
     :rtype: numpy.ndarray[][][int]
     """
-    old_min = stack_slice.min()
-    old_max = stack_slice.max()
-    return ((stack_slice - old_min) * (new_max - new_min) / (old_max - old_max) + (
-        new_min)).astype('uint8')
+    old_min = stack_slice.min() * 1.0
+    old_max = stack_slice.max() * 1.0
+    return ((stack_slice - old_min) * (new_max - new_min) / (old_max - old_min) + new_min).astype('uint8')
 
 
 def new():
