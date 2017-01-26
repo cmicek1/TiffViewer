@@ -82,6 +82,30 @@ class MainWindow(qg.QMainWindow):
         self.zoomSpinBox.setStatusTip(self.zoomSpinBox.toolTip())
         self.zoomSpinBox.setFocusPolicy(qc.Qt.NoFocus)
 
+        self.minContrastSpinBox = qg.QSpinBox()
+        self.minContrastSpinBox.setRange(0, 255)
+        self.minContrastSpinBox.setValue(self._min_intensity)
+        self.minContrastBar = qg.QSlider(qc.Qt.Horizontal)
+        self.minContrastBar.setRange(0, 255)
+        self.minContrastBar.setValue(self._min_intensity)
+
+        self.maxContrastSpinBox = qg.QSpinBox()
+        self.maxContrastSpinBox.setRange(0, 255)
+        self.maxContrastSpinBox.setValue(self._max_intensity)
+        self.maxContrastBar = qg.QSlider(qc.Qt.Horizontal)
+        self.maxContrastBar.setRange(0, 255)
+        self.maxContrastBar.setValue(self._max_intensity)
+
+        tempWidget = qg.QWidget(self.topToolbar)
+        tempWidget.setLayout(qg.QGridLayout())
+        tempWidget.layout().addWidget(self.minContrastSpinBox, 0, 0)
+        tempWidget.layout().addWidget(self.minContrastBar, 0, 1)
+        tempWidget.layout().addWidget(self.maxContrastSpinBox, 1, 0)
+        tempWidget.layout().addWidget(self.maxContrastBar, 1, 1)
+
+        # self.topToolbar.addWidget(self.zoomSpinBox)
+        self.topToolbar.addWidget(tempWidget)
+
         self.list = qg.QTableView(self)
         self.list.setFont(qg.QFont("Arial", 10))
         self.list.setSelectionBehavior(qg.QAbstractItemView.SelectRows)
