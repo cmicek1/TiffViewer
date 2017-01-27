@@ -88,6 +88,8 @@ class MainWindow(qg.QMainWindow):
         self.minContrastBar = qg.QSlider(qc.Qt.Horizontal)
         self.minContrastBar.setRange(0, 255)
         self.minContrastBar.setValue(self._min_intensity)
+        self.minContrastSpinBox.valueChanged.connect(self.minContrastBar.setValue)
+        self.minContrastBar.valueChanged.connect(self.minContrastSpinBox.setValue)
 
         self.maxContrastSpinBox = qg.QSpinBox()
         self.maxContrastSpinBox.setRange(0, 255)
@@ -95,6 +97,8 @@ class MainWindow(qg.QMainWindow):
         self.maxContrastBar = qg.QSlider(qc.Qt.Horizontal)
         self.maxContrastBar.setRange(0, 255)
         self.maxContrastBar.setValue(self._max_intensity)
+        self.maxContrastSpinBox.valueChanged.connect(self.maxContrastBar.setValue)
+        self.maxContrastBar.valueChanged.connect(self.maxContrastSpinBox.setValue)
 
         tempWidget = qg.QWidget(self.topToolbar)
         tempWidget.setLayout(qg.QGridLayout())
@@ -196,6 +200,7 @@ class MainWindow(qg.QMainWindow):
             # Resize image and overlay to new size
             # Add drawing nodes to window display functions
             a = self.stack.get_slice(self.z)
+            a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
             self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
             self.image.setColorTable(self.COLORTABLE)
             p = qg.QPixmap.fromImage(self.image)
@@ -321,6 +326,10 @@ class MainWindow(qg.QMainWindow):
             initialdir=os.path.expanduser('~/Desktop'))
         self.stack = ts.TiffStack(fpath)
 
+        # Get min and max intensities if changed from default prior to load
+        self._min_intensity = self.minContrastSpinBox.value()
+        self._max_intensity = self.maxContrastSpinBox.value()
+
         # Start at slice 0
         self.z = 0
         a = self.stack.get_slice(0)
@@ -339,6 +348,9 @@ class MainWindow(qg.QMainWindow):
         # Create initial overlay and internal representation of graph data
         self.points.initPoints()
         self.points.drawPoints()
+
+        self.minContrastSpinBox.valueChanged.connect(self._change_min_intensity)
+        self.maxContrastSpinBox.valueChanged.connect(self._change_max_intensity)
 
     def _pan(self, *args, **kwargs):
         """
@@ -408,6 +420,22 @@ class MainWindow(qg.QMainWindow):
             delta = -new_pos
             self.view.translate(delta.x(), delta.y())
             self.scale = 1.0
+
+    def _change_min_intensity(self, i):
+        self._min_intensity = i
+        a = self.stack.get_slice(self.z)
+        a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
+        self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
+        self.image.setColorTable(self.COLORTABLE)
+        self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
+
+    def _change_max_intensity(self, i):
+        self._max_intensity = i
+        a = self.stack.get_slice(self.z)
+        a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
+        self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
+        self.image.setColorTable(self.COLORTABLE)
+        self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
 
 
 class _MyGraphicsView(qg.QGraphicsView):

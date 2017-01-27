@@ -2,6 +2,8 @@ import os
 import tifffile as tf
 import Tkinter as Tk
 import tkFileDialog
+import numpy as np
+from skimage import exposure
 import pandas as pd
 import igraph as ig
 import nodedb as nd
@@ -149,9 +151,12 @@ def adjust_contrast(stack_slice, new_min, new_max):
     :return: The requested slice with adjusted contrast
     :rtype: numpy.ndarray[][][int]
     """
-    old_min = stack_slice.min() * 1.0
-    old_max = stack_slice.max() * 1.0
-    return ((stack_slice - old_min) * (new_max - new_min) / (old_max - old_min) + new_min).astype('uint8')
+    # TODO: Fix speed (and calculation?)
+    # old_min = stack_slice.min() * 1.0
+    # old_max = stack_slice.max() * 1.0
+    stack_slice[stack_slice <= new_min] = 0
+    stack_slice[stack_slice >= new_max] = 255
+    return (stack_slice * exposure.equalize_hist(stack_slice)).astype('uint8')
 
 
 def new():
