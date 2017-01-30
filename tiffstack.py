@@ -151,12 +151,10 @@ def adjust_contrast(stack_slice, new_min, new_max):
     :return: The requested slice with adjusted contrast
     :rtype: numpy.ndarray[][][int]
     """
-    # TODO: Fix speed (and calculation?)
-    # old_min = stack_slice.min() * 1.0
-    # old_max = stack_slice.max() * 1.0
-    stack_slice[stack_slice <= new_min] = 0
-    stack_slice[stack_slice >= new_max] = 255
-    return (stack_slice * exposure.equalize_hist(stack_slice)).astype('uint8')
+    stack_slice = (stack_slice - new_min * 1.0) * 255 / (new_max - new_min)
+    stack_slice[stack_slice <= 0] = 0
+    stack_slice[stack_slice >= 255] = 255
+    return stack_slice.astype('uint8')
 
 
 def new():

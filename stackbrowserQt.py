@@ -347,7 +347,15 @@ class MainWindow(qg.QMainWindow):
 
         # Create initial overlay and internal representation of graph data
         self.points.initPoints()
-        self.points.drawPoints()
+
+        # Pseudo-resize to fix point alignment after adding toolbar widgets
+        p = qg.QPixmap.fromImage(self.image)
+        self.view.resize(self.splitter.width(), self.splitter.width())
+        self.imageLabel.resize(self.splitter.width(), self.splitter.width())
+        self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
+
+        # Now draw new nodes
+        self.points.drawPoints(resize=True)
 
         self.minContrastSpinBox.valueChanged.connect(self._change_min_intensity)
         self.maxContrastSpinBox.valueChanged.connect(self._change_max_intensity)
