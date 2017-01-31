@@ -10,6 +10,11 @@ import Tkinter as Tk
 import tkFileDialog
 
 
+# Empty color palettes filled in during initialization; public to the whole module for later access
+GREEN = []
+RED = []
+
+
 class MainWindow(qg.QMainWindow):
     """
     Main application window for Qt Stack Browser. Subclasses QMainWindow, and serves as the top-level user interface
@@ -29,7 +34,9 @@ class MainWindow(qg.QMainWindow):
 
         # Add additional relevant attributes
         self.stack = None
+        self.open_stacks = []
         self.z = None
+        self.channel = None
         self.scale = 1.0
         self.image = None
         self._min_intensity = 7
@@ -37,7 +44,8 @@ class MainWindow(qg.QMainWindow):
         self.COLORTABLE = []
         # Set default color table for 8-bit images
         for i in range(256):
-            self.COLORTABLE.append(qg.qRgb(i / 4, i, i / 2))
+            GREEN.append(qg.qRgb(i / 4, i, i / 2))
+            RED.append(qg.qRgb(i, i / 4, i / 2))
 
         self.splitter = setter.splitter
 
@@ -199,14 +207,9 @@ class MainWindow(qg.QMainWindow):
         if self.stack is not None:
             # Resize image and overlay to new size
             # Add drawing nodes to window display functions
-            a = self.stack.get_slice(self.z)
-            a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
-            self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
-            self.image.setColorTable(self.COLORTABLE)
-            p = qg.QPixmap.fromImage(self.image)
+            self.view_slice(self.z)
             self.view.resize(self.splitter.width(), self.splitter.width())
             self.imageLabel.resize(self.splitter.width(), self.splitter.width())
-            self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
 
             # Now draw new nodes
             self.points.drawPoints(resize=True)
@@ -237,11 +240,8 @@ class MainWindow(qg.QMainWindow):
             # print 'MyWindow.wheelEvent()', event.delta(), self.z
             # self.label.setText("Total Steps: "+QString.number(self.x))
 
-            a = self.stack.get_slice(self.z)
-            a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
-            self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
-            self.image.setColorTable(self.COLORTABLE)
-            self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
+            self.view_slice(self.z)
+
             # Now draw new nodes
             self.points.drawPoints()
 
@@ -268,6 +268,18 @@ class MainWindow(qg.QMainWindow):
             self.action_handler('pan', k, panvalue)
         if k in zoom_keys:
             self.action_handler('zoom', k, zoomfactor)
+
+    def view_slice(self, z):
+        a = self.stack.get_slice(z)
+        a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
+        self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
+        if self.channel == 1:
+            self.COLORTABLE = GREEN
+        elif self.channel == 2:
+            self.COLORTABLE = RED
+        self.image.setColorTable(self.COLORTABLE)
+        p = qg.QPixmap.fromImage(self.image)
+        self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
 
     def _node_select(self, *args, **kwargs):
         deselect = False
@@ -325,6 +337,11 @@ class MainWindow(qg.QMainWindow):
         fpath = tkFileDialog.askopenfilename(
             initialdir=os.path.expanduser('~/Desktop'))
         self.stack = ts.TiffStack(fpath)
+        self.channel = 1
+
+        # TODO: Try/except to prevent RAM overflow
+        if self.stack not in self.open_stacks:
+            self.open_stacks.append(self.stack)
 
         # Get min and max intensities if changed from default prior to load
         self._min_intensity = self.minContrastSpinBox.value()
@@ -332,12 +349,7 @@ class MainWindow(qg.QMainWindow):
 
         # Start at slice 0
         self.z = 0
-        a = self.stack.get_slice(0)
-        a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
-        self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
-        self.image.setColorTable(self.COLORTABLE)
-        p = qg.QPixmap.fromImage(self.image)
-        self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
+        self.view_slice(self.z)
         old = self.list.selectionModel()
         pointModel = pt.PointTable(self.stack.node_db.dframe)
         self.list.setModel(pointModel)
@@ -349,10 +361,8 @@ class MainWindow(qg.QMainWindow):
         self.points.initPoints()
 
         # Pseudo-resize to fix point alignment after adding toolbar widgets
-        p = qg.QPixmap.fromImage(self.image)
         self.view.resize(self.splitter.width(), self.splitter.width())
         self.imageLabel.resize(self.splitter.width(), self.splitter.width())
-        self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
 
         # Now draw new nodes
         self.points.drawPoints(resize=True)
@@ -431,19 +441,84 @@ class MainWindow(qg.QMainWindow):
 
     def _change_min_intensity(self, i):
         self._min_intensity = i
-        a = self.stack.get_slice(self.z)
-        a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
-        self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
-        self.image.setColorTable(self.COLORTABLE)
-        self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
+        self.view_slice(self.z)
 
     def _change_max_intensity(self, i):
         self._max_intensity = i
-        a = self.stack.get_slice(self.z)
-        a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
-        self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
-        self.image.setColorTable(self.COLORTABLE)
-        self.imageLabel.setPixmap(qg.QPixmap.fromImage(self.image))
+        self.view_slice(self.z)
+
+    # TODO: Update to work with Qt
+    def _change_view(self, direction):
+        """
+        Change the file seen in the current viewer.
+
+        View either the previous or the next time point,
+        if it exists, or switch between channels 1 and
+        2.
+
+        NOTE: Expects a working directory of only vascular
+        stack TIFFs, alternating between channels 1 and 2,
+        named as follows:
+
+        Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_chCHANNELNUMBER.tif
+        ex: X20140516_a153_006_ch2.tif
+
+        :param direction: The direction to look, either next
+                          or prev.
+
+        :type direction: str in ['next', 'prev']
+
+        :return: None
+        """
+        dirpath = os.path.dirname(self.stack.directory)
+        flist = os.listdir(dirpath)
+        curr_index = flist.index(os.path.basename(self.stack.directory))
+        fname = None
+        try:
+            # Deal with time point change
+            if direction == 'next':
+                if curr_index < len(flist) - 3:
+                    fname = flist[curr_index + 2]
+                    if not fname.endswith('.tif'):
+                        raise StackOutOfBoundsException(
+                            "No future time point (end of hyperstack)"
+                        )
+                else:
+                    raise StackOutOfBoundsException(
+                        "No future time point (end of hyperstack)"
+                    )
+            elif direction == 'prev':
+                if curr_index > 1:
+                    fname = flist[curr_index - 2]
+                    if not fname.endswith('.tif'):
+                        raise StackOutOfBoundsException(
+                            "No previous time point (beginning of hyperstack)"
+                        )
+                else:
+                    raise StackOutOfBoundsException(
+                        "No previous time point (beginning of hyperstack)"
+                    )
+
+            # Deal with channel change
+            elif direction == '1':
+                self.curr_channel = 1
+                fname = flist[curr_index - 1]
+            elif direction == '2':
+                self.curr_channel = 2
+                fname = flist[curr_index + 1]
+
+        except StackOutOfBoundsException as e:
+            print(e.args[0])
+
+        if fname is not None:
+            for stack in self.open_stacks:
+                if stack.fname == fname:
+                    self.stack = stack
+            if self.stack.fname != fname:
+                self.stack = ts.TiffStack(dirpath + '/' + fname)
+            self.view_slice(self.z)
+            if self.stack not in self.open_stacks:
+                self.open_stacks.append(self.stack)
 
 
 class _MyGraphicsView(qg.QGraphicsView):
@@ -478,6 +553,14 @@ class _MyGraphicsView(qg.QGraphicsView):
         """
         # Apparently this affects the transformation anchor
         pass
+
+
+class StackOutOfBoundsException(Exception):
+    """
+    Extension of Exception to indicate attempts to
+    access time points out of range.
+    """
+    pass
 
 
 def _exit_handler():

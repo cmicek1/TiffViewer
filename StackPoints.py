@@ -83,6 +83,12 @@ class DrawingPointsWidget(qg.QWidget):
         :return: None
         """
 
+        # If opening a new file, delete all currently active items
+        for item in self.browser.scene.items():
+            if item.parentItem() is None and not item.isWidget():
+                self.browser.scene.removeItem(item)
+                del item
+
         # Create pens and brushes to color nodes, slabs, and edges
         slab_pen = qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap)
         slab_brush = qg.QBrush(qc.Qt.cyan)
