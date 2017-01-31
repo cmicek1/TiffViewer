@@ -45,7 +45,7 @@ class MainWindow(qg.QMainWindow):
         # Set default color table for 8-bit images
         for i in range(256):
             GREEN.append(qg.qRgb(i / 4, i, i / 2))
-            RED.append(qg.qRgb(i, i / 4, i / 2))
+            RED.append(qg.qRgb(i, i / 4, i / 4))
 
         self.splitter = setter.splitter
 
@@ -138,7 +138,8 @@ class MainWindow(qg.QMainWindow):
 
         :return: None
         """
-        valid_funcs = {'open': self._open, 'pan': self._pan, 'zoom': self._zoom, '_node_select': self._node_select}
+        valid_funcs = {'open': self._open, 'pan': self._pan, 'zoom': self._zoom, '_node_select': self._node_select,
+                       'change_view': self._change_view}
 
         valid_funcs[handle](*args, **kwargs)
 
@@ -264,12 +265,27 @@ class MainWindow(qg.QMainWindow):
         k = event.key()
         pan_keys = [qc.Qt.Key_Left, qc.Qt.Key_Right, qc.Qt.Key_Up, qc.Qt.Key_Down, qc.Qt.Key_Enter, qc.Qt.Key_Return]
         zoom_keys = [qc.Qt.Key_Plus, qc.Qt.Key_Minus, qc.Qt.Key_Enter, qc.Qt.Key_Return]
-        if k in pan_keys:
+        channel_keys = [qc.Qt.Key_1, qc.Qt.Key_2]
+        if event.modifiers() == qc.Qt.ShiftModifier and (k == qc.Qt.Key_Right or k == qc.Qt.Key_Left) or (
+                    k in channel_keys):
+            self.action_handler('change_view', k)
+        elif k in pan_keys:
             self.action_handler('pan', k, panvalue)
         if k in zoom_keys:
             self.action_handler('zoom', k, zoomfactor)
 
+        qg.QMainWindow.keyPressEvent(self, event)
+
     def view_slice(self, z):
+        """
+        Change the current view to the provided slice
+
+        :param z: The slice depth
+
+        :type z: int
+
+        :return: None
+        """
         a = self.stack.get_slice(z)
         a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
         self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
@@ -282,6 +298,22 @@ class MainWindow(qg.QMainWindow):
         self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
 
     def _node_select(self, *args, **kwargs):
+        """
+        Hidden slot in charge of regulating the simultaneous selection/deselection of nodes in the view and point
+        list. When the selectionChanged signal or ItemSelectedHasChanged event is received from either the list or
+        Node, respectively, this function will trigger the corresponding event in the opposite widget.
+
+        :param args: Argument list. Depending on the caller, this can be either a one-element list containing the
+                     altered Node from the view, or a two-element list containing QItemSelections of the selected and
+                     deselected entries in the point list.
+        :param kwargs: Keyword arguments. May contain the boolean 'deselect', which is True if the expected change is a
+                       deselection
+
+        :type args: list[Node] or list[PyQt4.QtGui.QItemSelection, PyQt4.QtGui.QItemSelection]
+        :type kwargs: dict[str: bool]
+
+        :return: None
+        """
         deselect = False
         if 'deselect' in kwargs:
             deselect = kwargs['deselect']
@@ -339,9 +371,11 @@ class MainWindow(qg.QMainWindow):
         self.stack = ts.TiffStack(fpath)
         self.channel = 1
 
-        # TODO: Try/except to prevent RAM overflow
         if self.stack not in self.open_stacks:
-            self.open_stacks.append(self.stack)
+            try:
+                self.open_stacks.append(self.stack)
+            except MemoryError:
+                self.open_stacks[0] = self.stack
 
         # Get min and max intensities if changed from default prior to load
         self._min_intensity = self.minContrastSpinBox.value()
@@ -447,8 +481,7 @@ class MainWindow(qg.QMainWindow):
         self._max_intensity = i
         self.view_slice(self.z)
 
-    # TODO: Update to work with Qt
-    def _change_view(self, direction):
+    def _change_view(self, *args, **kwargs):
         """
         Change the file seen in the current viewer.
 
@@ -463,20 +496,20 @@ class MainWindow(qg.QMainWindow):
         Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_chCHANNELNUMBER.tif
         ex: X20140516_a153_006_ch2.tif
 
-        :param direction: The direction to look, either next
-                          or prev.
+        :param args: Argument list containing key from keyPressEvent
 
-        :type direction: str in ['next', 'prev']
+        :type args: list[int]
 
         :return: None
         """
         dirpath = os.path.dirname(self.stack.directory)
-        flist = os.listdir(dirpath)
+        flist = [f for f in os.listdir(dirpath) if f.endswith('.tif')]
         curr_index = flist.index(os.path.basename(self.stack.directory))
         fname = None
+        key = args[0]
         try:
             # Deal with time point change
-            if direction == 'next':
+            if key == qc.Qt.Key_Right:
                 if curr_index < len(flist) - 3:
                     fname = flist[curr_index + 2]
                     if not fname.endswith('.tif'):
@@ -487,7 +520,7 @@ class MainWindow(qg.QMainWindow):
                     raise StackOutOfBoundsException(
                         "No future time point (end of hyperstack)"
                     )
-            elif direction == 'prev':
+            elif key == qc.Qt.Key_Left:
                 if curr_index > 1:
                     fname = flist[curr_index - 2]
                     if not fname.endswith('.tif'):
@@ -500,11 +533,11 @@ class MainWindow(qg.QMainWindow):
                     )
 
             # Deal with channel change
-            elif direction == '1':
-                self.curr_channel = 1
+            elif key == qc.Qt.Key_1 and self.channel != 1:
+                self.channel = 1
                 fname = flist[curr_index - 1]
-            elif direction == '2':
-                self.curr_channel = 2
+            elif key == qc.Qt.Key_2 and self.channel != 2:
+                self.channel = 2
                 fname = flist[curr_index + 1]
 
         except StackOutOfBoundsException as e:
@@ -518,7 +551,10 @@ class MainWindow(qg.QMainWindow):
                 self.stack = ts.TiffStack(dirpath + '/' + fname)
             self.view_slice(self.z)
             if self.stack not in self.open_stacks:
-                self.open_stacks.append(self.stack)
+                try:
+                    self.open_stacks.append(self.stack)
+                except MemoryError:
+                    self.open_stacks[0] = self.stack
 
 
 class _MyGraphicsView(qg.QGraphicsView):
