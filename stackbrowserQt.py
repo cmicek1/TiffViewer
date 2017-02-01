@@ -80,7 +80,9 @@ class MainWindow(qg.QMainWindow):
 
         # Add removable toolbars for useful interaction and information display
         self.leftToolbar = setter.toolBar
+        self.leftToolbar.topLevelChanged.connect(self.resizeEvent)
         self.topToolbar = setter.toolBar_2
+        self.topToolbar.topLevelChanged.connect(self.resizeEvent)
 
         self.zoomSpinBox = qg.QSpinBox()
         self.zoomSpinBox.setRange(1, 400)
@@ -296,6 +298,12 @@ class MainWindow(qg.QMainWindow):
         self.image.setColorTable(self.COLORTABLE)
         p = qg.QPixmap.fromImage(self.image)
         self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
+        if z < self.z - 1 or z > self.z + 1:
+            for item in self.scene.items():
+                if item.parentItem() is None and not item.isWidget():
+                    item.hide()
+        self.z = z
+        self.points.drawPoints(resize=True)
 
     def _node_select(self, *args, **kwargs):
         """
@@ -338,6 +346,7 @@ class MainWindow(qg.QMainWindow):
                     prev_row = node.row()
                     n = self.points.nodes_by_idx[node.row()]
                     n.show()
+                    self.view_slice(n.dfentry.z)
                     if not n.isSelected():
                         n.setSelected(True)
 
@@ -474,10 +483,28 @@ class MainWindow(qg.QMainWindow):
             self.scale = 1.0
 
     def _change_min_intensity(self, i):
+        """
+        Changes the minimum intensity threshold of the image - all pixels at or below this value are mapped to 0.
+
+        :param i: The new minimum intensity threshold
+
+        :type i: int
+
+        :return: None
+        """
         self._min_intensity = i
         self.view_slice(self.z)
 
     def _change_max_intensity(self, i):
+        """
+        Changes the maximum intensity threshold of the image - all pixels at or below this value are mapped to 255.
+
+        :param i: The new maximum intensity threshold
+
+        :type i: int
+
+        :return: None
+        """
         self._max_intensity = i
         self.view_slice(self.z)
 
