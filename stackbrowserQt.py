@@ -303,7 +303,6 @@ class MainWindow(qg.QMainWindow):
                 if item.parentItem() is None and not item.isWidget():
                     item.hide()
         self.z = z
-        self.points.drawPoints(resize=True)
 
     def _node_select(self, *args, **kwargs):
         """
@@ -347,6 +346,7 @@ class MainWindow(qg.QMainWindow):
                     n = self.points.nodes_by_idx[node.row()]
                     n.show()
                     self.view_slice(n.dfentry.z)
+                    self.points.drawPoints()
                     if not n.isSelected():
                         n.setSelected(True)
 
