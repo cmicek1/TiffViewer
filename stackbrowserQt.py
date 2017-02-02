@@ -147,39 +147,6 @@ class MainWindow(qg.QMainWindow):
 
         valid_funcs[handle](*args, **kwargs)
 
-    def eventFilter(self, watched, event):
-        """
-        Overloaded method from QMainWindow. Catches the event from watched and allows it to proceed if it is of the
-        appropriate type.
-
-        :param watched: The source (widget) of the caught event
-        :param event: The event that was caught
-
-        :type watched: PyQt4.QtCore.QObject
-        :type event: PyQt4.QtCore.QEvent
-
-        :return: True if 'event' was filtered out, False else
-        :rtype: bool
-        """
-        # TODO: Detect when toolbar is moved, and reposition points appropriately
-        if event.type() == qc.QEvent.Wheel or event.type() == qc.QEvent.GraphicsSceneWheel:
-            self.wheelEvent(event)
-
-        if event.type() == qc.QEvent.MouseMove and watched is self.view.viewport():
-            pos = event.pos()
-            print('mouse move: (%d, %d)' % (pos.x(), pos.y()))
-            # self.updateStatus('mouse ' + str(pos.x()) + ' ' + str(pos.y()))
-
-        if event.type() == qc.QEvent.KeyPress:
-            # self.updateStatus('mouse ' + str(pos.x()) + ' ' + str(pos.y()))
-            self.keyPressEvent(event)
-
-        if event.type() == qc.QEvent.Resize:
-            self.resizeEvent(event)
-
-        # After taking custom action, send back to superclass event filter for default behavior
-        return qg.QMainWindow.eventFilter(self, watched, event)
-
     def showEvent(self, event):
         """
         Overloaded method from QMainWindow. Handles QShowEvents, which occur when the application window is shown on
@@ -212,7 +179,7 @@ class MainWindow(qg.QMainWindow):
         if self.stack is not None:
             # Resize image and overlay to new size
             # Add drawing nodes to window display functions
-            self.view_slice(self.z)
+            # self.view_slice(self.z)
             self.view.resize(self.splitter.width(), self.splitter.width())
             self.imageLabel.resize(self.splitter.width(), self.splitter.width())
 
