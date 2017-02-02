@@ -33,6 +33,7 @@ class DrawingPointsWidget(qg.QWidget):
         self.browser = browser
         self.scaleFactor = 1  # fraction of total
         self.isVisible = 1  # Show all points and edges by default
+        self.offset = 1
 
         self.setWindowFlags(self.windowFlags() | qc.Qt.FramelessWindowHint)
         self.setMouseTracking(True)
@@ -221,7 +222,7 @@ class DrawingPointsWidget(qg.QWidget):
             return
 
         # Else, set offset from current z to search for items to be shown
-        offset = 1
+        offset = self.offset
 
         # Calculate min slice in range
         d1 = int(self.browser.z - offset)

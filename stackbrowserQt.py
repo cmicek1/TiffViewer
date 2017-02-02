@@ -344,6 +344,13 @@ class MainWindow(qg.QMainWindow):
             deselected = args[1]
 
             prev_row = None
+
+            for i in range(self.z - self.points.offset, self.z + self.points.offset + 1):
+                if i in self.points.nodes:
+                    for node in self.points.nodes[i]:
+                        if node.isVisible():
+                            node.hide()
+
             for node in selected.indexes():
                 if node.row() != prev_row:
                     prev_row = node.row()
