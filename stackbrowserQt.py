@@ -80,9 +80,11 @@ class MainWindow(qg.QMainWindow):
 
         # Add removable toolbars for useful interaction and information display
         self.leftToolbar = setter.toolBar
-        self.leftToolbar.topLevelChanged.connect(self.resizeEvent)
+        self.leftToolbar.topLevelChanged.connect(lambda event, func=self.resizeEvent: func(event=qg.QResizeEvent(
+            self.size(), self.size())))
         self.topToolbar = setter.toolBar_2
-        self.topToolbar.topLevelChanged.connect(self.resizeEvent)
+        self.topToolbar.topLevelChanged.connect(lambda event, func=self.resizeEvent: func(event=qg.QResizeEvent(
+            self.size(), self.size())))
 
         self.zoomSpinBox = qg.QSpinBox()
         self.zoomSpinBox.setRange(1, 400)
@@ -220,6 +222,8 @@ class MainWindow(qg.QMainWindow):
             # Resize container widgets to new window size
             self.view.resize(self.width(), self.width())
             self.imageLabel.resize(self.width(), self.width())
+
+        qg.QMainWindow.resizeEvent(self, event)
 
     def wheelEvent(self, event):
         """
