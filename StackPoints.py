@@ -302,6 +302,7 @@ class DrawingPointsWidget(qg.QWidget):
 
         # Check scale out of scope so the current stored scale can be modified
         scale = float(self.browser.splitter.width()) / self.browser.stack.imarray.shape[1]
+
         if resize:  # Scale all items (both visible and invisible) via a linear iteration through each member dict,
             # so scales of all items are easy to keep track of
             for k in self.slabs:

@@ -163,7 +163,6 @@ class MainWindow(qg.QMainWindow):
         size = self.splitter.size()
         self.view.resize(size)
         self.imageLabel.resize(size)
-        print(self.imageLabel.size())
 
     def resizeEvent(self, event):
         """
@@ -179,11 +178,13 @@ class MainWindow(qg.QMainWindow):
             # Resize image and overlay to new size
             # Add drawing nodes to window display functions
             # self.view_slice(self.z)
+            print(self.splitter.size())
+            self.points.resize(self.splitter.width(), self.splitter.width())
             self.view.resize(self.splitter.width(), self.splitter.width())
             self.imageLabel.resize(self.splitter.width(), self.splitter.width())
 
             # Now draw new nodes
-            self.points.drawPoints()
+            self.points.drawPoints(resize=True)
         else:
             # Resize container widgets to new window size
             self.view.resize(self.width(), self.width())
@@ -274,11 +275,12 @@ class MainWindow(qg.QMainWindow):
                     item.hide()
         self.z = z
 
-    def _help_toolbar_resize(self, toplevel):
-        if toplevel and not self._ptresize:
-            self._ptresize = True
-        else:
-            self._ptresize = False
+    def _help_toolbar_resize(self, *_args):
+        self.points.cur_scale = float(self.splitter.width()) / self.stack.imarray.shape[1]
+        self.points.resize(self.splitter.width(), self.splitter.width())
+        self.view.resize(self.splitter.width(), self.splitter.width())
+        self.imageLabel.resize(self.splitter.width(), self.splitter.width())
+        self.points.drawPoints(resize=True)
 
     def _node_select(self, *args, **kwargs):
         """
