@@ -37,6 +37,7 @@ class MainWindow(qg.QMainWindow):
         self.open_stacks = []
         self.z = None
         self.channel = None
+        self._ptresize = False
         self.scale = 1.0
         self.image = None
         self._min_intensity = 7
@@ -80,11 +81,9 @@ class MainWindow(qg.QMainWindow):
 
         # Add removable toolbars for useful interaction and information display
         self.leftToolbar = setter.toolBar
-        self.leftToolbar.topLevelChanged.connect(lambda event, func=self.resizeEvent: func(event=qg.QResizeEvent(
-            self.size(), self.size())))
+        # self.leftToolbar.topLevelChanged.connect(lambda toplevel, func=self._help_toolbar_resize: func(toplevel))
         self.topToolbar = setter.toolBar_2
-        self.topToolbar.topLevelChanged.connect(lambda event, func=self.resizeEvent: func(event=qg.QResizeEvent(
-            self.size(), self.size())))
+        # self.topToolbar.topLevelChanged.connect(lambda toplevel, func=self._help_toolbar_resize: func(toplevel))
 
         self.zoomSpinBox = qg.QSpinBox()
         self.zoomSpinBox.setRange(1, 400)
@@ -184,7 +183,7 @@ class MainWindow(qg.QMainWindow):
             self.imageLabel.resize(self.splitter.width(), self.splitter.width())
 
             # Now draw new nodes
-            self.points.drawPoints(resize=True)
+            self.points.drawPoints()
         else:
             # Resize container widgets to new window size
             self.view.resize(self.width(), self.width())
@@ -217,7 +216,7 @@ class MainWindow(qg.QMainWindow):
             self.view_slice(self.z)
 
             # Now draw new nodes
-            self.points.drawPoints()
+            self.points.drawPoints(self._ptresize)
 
     def keyPressEvent(self, event):
         """
@@ -274,6 +273,12 @@ class MainWindow(qg.QMainWindow):
                 if item.parentItem() is None and not item.isWidget():
                     item.hide()
         self.z = z
+
+    def _help_toolbar_resize(self, toplevel):
+        if toplevel and not self._ptresize:
+            self._ptresize = True
+        else:
+            self._ptresize = False
 
     def _node_select(self, *args, **kwargs):
         """
