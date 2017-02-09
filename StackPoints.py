@@ -21,7 +21,7 @@ class DrawingPointsWidget(qg.QWidget):
 
         :type browser: MainWindow
         """
-        super(qg.QWidget, self).__init__(browser.view)
+        super(qg.QWidget, self).__init__()
         self.nodes = {}
         self.slabs = {}
         self.edge_segs = {}

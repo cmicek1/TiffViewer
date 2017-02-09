@@ -64,6 +64,8 @@ class Ui_MainWindow(object):
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuFile = QtGui.QMenu(self.menubar)
         self.menuFile.setObjectName(_fromUtf8("menuFile"))
+        self.menuView = QtGui.QMenu(self.menubar)
+        self.menuView.setObjectName(_fromUtf8("menuView"))
         MainWindow.setMenuBar(self.menubar)
 
         self.statusbar = QtGui.QStatusBar(MainWindow)
@@ -86,12 +88,20 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.action_Open)
         self.menubar.addAction(self.menuFile.menuAction())
 
+        self.action_FindPoints = QtGui.QAction(MainWindow)
+        self.action_FindPoints.setObjectName(_fromUtf8("action_FindPoints"))
+
+        self.menuView.addAction(self.action_FindPoints)
+        self.menubar.addAction(self.menuView.menuAction())
+
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "StackBrowser", None))
         self.menuFile.setTitle(_translate("MainWindow", "File", None))
+        self.menuView.setTitle(_translate("MainWindow", "View", None))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar", None))
         self.toolBar_2.setWindowTitle(_translate("MainWindow", "toolBar_2", None))
         self.action_Open.setText(_translate("MainWindow", "&Open...", None))
+        self.action_FindPoints.setText(_translate("MainWindow", "Find Points", None))
