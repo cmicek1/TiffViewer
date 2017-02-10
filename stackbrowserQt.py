@@ -35,7 +35,9 @@ class MainWindow(qg.QMainWindow):
         # Add additional relevant attributes
         self.stack = None
         self.open_stacks = []
+        self.scroll_z = None
         self.z = None
+        self._prev_selected_slice = None
         self.channel = None
         self._ptresize = False
         self.scale = 1.0
@@ -81,9 +83,9 @@ class MainWindow(qg.QMainWindow):
 
         # Add removable toolbars for useful interaction and information display
         self.leftToolbar = setter.toolBar
-        # self.leftToolbar.topLevelChanged.connect(lambda toplevel, func=self._help_toolbar_resize: func(toplevel))
+        self.leftToolbar.topLevelChanged.connect(lambda toplevel, func=self._help_toolbar_resize: func(toplevel))
         self.topToolbar = setter.toolBar_2
-        # self.topToolbar.topLevelChanged.connect(lambda toplevel, func=self._help_toolbar_resize: func(toplevel))
+        self.topToolbar.topLevelChanged.connect(lambda toplevel, func=self._help_toolbar_resize: func(toplevel))
 
         self.zoomSpinBox = qg.QSpinBox()
         self.zoomSpinBox.setRange(1, 400)
@@ -177,9 +179,7 @@ class MainWindow(qg.QMainWindow):
         if self.stack is not None:
             # Resize image and overlay to new size
             # Add drawing nodes to window display functions
-            # self.view_slice(self.z)
-            print(self.splitter.size())
-            self.points.resize(self.splitter.width(), self.splitter.width())
+            self.view_slice(self.z)
             self.view.resize(self.splitter.width(), self.splitter.width())
             self.imageLabel.resize(self.splitter.width(), self.splitter.width())
 
@@ -207,6 +207,7 @@ class MainWindow(qg.QMainWindow):
         if self.stack is not None:
             # Add drawing nodes to window display functions
             self.z -= np.sign(event.delta())
+            self.scroll_z = self.z
             if self.z < 0:
                 self.z = 0
             if self.z > self.stack.maxz:
@@ -276,10 +277,12 @@ class MainWindow(qg.QMainWindow):
         self.z = z
 
     def _help_toolbar_resize(self, *_args):
+        toplevel = None
+        if len(_args) > 0:
+            toplevel = _args[0]
         self.points.cur_scale = float(self.splitter.width()) / self.stack.imarray.shape[1]
-        self.points.resize(self.splitter.width(), self.splitter.width())
-        self.view.resize(self.splitter.width(), self.splitter.width())
-        self.imageLabel.resize(self.splitter.width(), self.splitter.width())
+        # self.view.resize(self.splitter.width(), self.splitter.width())
+        # self.imageLabel.resize(self.splitter.width(), self.splitter.width())
         self.points.drawPoints(resize=True)
 
     def _node_select(self, *args, **kwargs):
@@ -300,6 +303,8 @@ class MainWindow(qg.QMainWindow):
         :return: None
         """
         deselect = False
+        if self._prev_selected_slice is None:
+            self._prev_selected_slice = self.z
         if 'deselect' in kwargs:
             deselect = kwargs['deselect']
 
@@ -319,11 +324,12 @@ class MainWindow(qg.QMainWindow):
 
             prev_row = None
 
-            for i in range(self.z - self.points.offset, self.z + self.points.offset + 1):
-                if i in self.points.nodes:
-                    for node in self.points.nodes[i]:
-                        if node.isVisible():
-                            node.hide()
+            prev_vis_range = range(self._prev_selected_slice - self.points.offset,
+                                   self._prev_selected_slice + self.points.offset + 1)
+
+            prev_scroll_range = []
+            if self.scroll_z is not None:
+                prev_scroll_range = range(self.scroll_z - self.points.offset, self.scroll_z + self.points.offset + 1)
 
             for node in selected.indexes():
                 if node.row() != prev_row:
@@ -335,13 +341,25 @@ class MainWindow(qg.QMainWindow):
                     if not n.isSelected():
                         n.setSelected(True)
 
-            prev_row = None
             for node in deselected.indexes():
                 if node.row() != prev_row:
                     prev_row = node.row()
                     n = self.points.nodes_by_idx[node.row()]
                     if n.isSelected():
                         n.setSelected(False)
+
+            for i in prev_vis_range:
+                if i in self.points.nodes:
+                    for node in self.points.nodes[i]:
+                        if node.isVisible() and self.z not in prev_vis_range:
+                            node.hide()
+            for i in prev_scroll_range:
+                if i in self.points.nodes:
+                    for node in self.points.nodes[i]:
+                        if node.isVisible() and self.z not in prev_scroll_range:
+                            node.hide()
+
+        self._prev_selected_slice = self.z
 
     def _open(self, *args, **kwargs):
         """
