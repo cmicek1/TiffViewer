@@ -272,7 +272,7 @@ class MainWindow(qg.QMainWindow):
         self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
         if z < self.z - 1 or z > self.z + 1:
             for item in self.scene.items():
-                if item.parentItem() is None and not item.isWidget():
+                if item.parentItem() is None and not item.isWidget() and not item.isSelected():
                     item.hide()
         self.z = z
 
@@ -330,15 +330,22 @@ class MainWindow(qg.QMainWindow):
             if self.scroll_z is not None:
                 prev_scroll_range = range(self.scroll_z - self.points.offset, self.scroll_z + self.points.offset + 1)
 
-            for node in selected.indexes():
+            for i, node in enumerate(selected.indexes()):
                 if node.row() != prev_row:
                     prev_row = node.row()
+                    print(node.row())
                     n = self.points.nodes_by_idx[node.row()]
                     n.show()
-                    # self.view_slice(n.dfentry.z)
-                    self.points.drawPoints()
+                    # TODO: Fix snap to only occur on list click, only snap to last selected point
+
                     if not n.isSelected():
                         n.setSelected(True)
+
+            selection = self.list.selectionModel().selectedRows()
+            if len(selection) > 0:
+                n = self.points.nodes_by_idx[selection[-1].row()]
+                self.view_slice(n.dfentry.z)
+                self.points.drawPoints()
 
             for node in deselected.indexes():
                 if node.row() != prev_row:
@@ -470,7 +477,6 @@ class MainWindow(qg.QMainWindow):
             new_pos = self.view.mapToScene(self.view.mapFromGlobal(qg.QCursor.pos()))
             delta = new_pos - old_pos
             self.view.translate(delta.x(), delta.y())
-        # TODO: Fix incorrect view size when zooming out
         if key == qc.Qt.Key_Minus:  # Zoom out
             self.scale /= factor
             self.view.scale(1.0/factor, 1.0/factor)
