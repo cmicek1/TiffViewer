@@ -280,7 +280,8 @@ class MainWindow(qg.QMainWindow):
         toplevel = None
         if len(_args) > 0:
             toplevel = _args[0]
-        self.points.cur_scale = float(self.splitter.width()) / self.stack.imarray.shape[1]
+        if toplevel is not None and toplevel:
+            self.points.cur_scale = float(self.splitter.width()) / self.stack.imarray.shape[1]
         # self.view.resize(self.splitter.width(), self.splitter.width())
         # self.imageLabel.resize(self.splitter.width(), self.splitter.width())
         self.points.drawPoints(resize=True)
