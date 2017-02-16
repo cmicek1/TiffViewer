@@ -31,6 +31,7 @@ class MainWindow(qg.QMainWindow):
         action_open = setter.action_Open
 
         action_open.triggered.connect(lambda: self.action_handler('open'))
+        setter.action_FindPoints.triggered.connect(lambda: self.action_handler('find_points'))
 
         # Add additional relevant attributes
         self.stack = None
@@ -144,7 +145,7 @@ class MainWindow(qg.QMainWindow):
         :return: None
         """
         valid_funcs = {'open': self._open, 'pan': self._pan, 'zoom': self._zoom, '_node_select': self._node_select,
-                       'change_view': self._change_view}
+                       'change_view': self._change_view, 'find_points': self._find_points}
 
         valid_funcs[handle](*args, **kwargs)
 
@@ -377,19 +378,29 @@ class MainWindow(qg.QMainWindow):
         """
         # Open a dialog box allowing the user to select a TiffStack to display. See tiffstack.py and the repository
         # README for more info.
-        root = Tk.Tk()
-        root.attributes('-topmost', True)
-        root.withdraw()
-        fpath = tkFileDialog.askopenfilename(
-            initialdir=os.path.expanduser('~/Desktop'))
-        self.stack = ts.TiffStack(fpath)
-        self.channel = 1
+        find_points = False
+        stack = self.stack
+        if 'find_points' in kwargs:
+            find_points = kwargs['find_points']
+            stack = args[0]
 
-        if self.stack not in self.open_stacks:
+        if not find_points:
+            root = Tk.Tk()
+            root.attributes('-topmost', True)
+            root.withdraw()
+            fpath = tkFileDialog.askopenfilename(
+                initialdir=os.path.expanduser('~/Desktop'))
             try:
-                self.open_stacks.append(self.stack)
+                self.stack = ts.TiffStack(fpath)
+            except IOError:
+                return
+            self.channel = 1
+
+        if stack not in self.open_stacks:
+            try:
+                self.open_stacks.append(stack)
             except MemoryError:
-                self.open_stacks[0] = self.stack
+                self.open_stacks[0] = stack
 
         # Get min and max intensities if changed from default prior to load
         self._min_intensity = self.minContrastSpinBox.value()
@@ -417,6 +428,12 @@ class MainWindow(qg.QMainWindow):
 
         self.minContrastSpinBox.valueChanged.connect(self._change_min_intensity)
         self.maxContrastSpinBox.valueChanged.connect(self._change_max_intensity)
+
+    def _find_points(self, *args, **kwargs):
+        new_stack = self._change_view(qc.Qt.Key_Right, find_points=True)
+        if new_stack is not None:
+            win2 = MainWindow()
+            win2.action_handler('find_points', new_stack, find_points=True)
 
     def _pan(self, *args, **kwargs):
         """
@@ -534,6 +551,8 @@ class MainWindow(qg.QMainWindow):
 
         :return: None
         """
+        if self.stack is None:
+            return
         dirpath = os.path.dirname(self.stack.directory)
         flist = [f for f in os.listdir(dirpath) if f.endswith('.tif')]
         curr_index = flist.index(os.path.basename(self.stack.directory))
@@ -574,12 +593,15 @@ class MainWindow(qg.QMainWindow):
 
         except StackOutOfBoundsException as e:
             print(e.args[0])
+            return
 
         if fname is not None:
             for stack in self.open_stacks:
                 if stack.fname == fname:
                     self.stack = stack
             if self.stack.fname != fname:
+                if 'find_points' in kwargs and kwargs['find_points']:
+                    return ts.TiffStack(dirpath + '/' + fname)
                 self.stack = ts.TiffStack(dirpath + '/' + fname)
             self.view_slice(self.z)
             if self.stack not in self.open_stacks:
