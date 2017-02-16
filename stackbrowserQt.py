@@ -282,9 +282,7 @@ class MainWindow(qg.QMainWindow):
             toplevel = _args[0]
         if toplevel is not None and toplevel:
             self.points.cur_scale = float(self.splitter.width()) / self.stack.imarray.shape[1]
-        # self.view.resize(self.splitter.width(), self.splitter.width())
-        # self.imageLabel.resize(self.splitter.width(), self.splitter.width())
-        self.points.drawPoints(resize=True)
+            self.points.drawPoints(resize=True)
 
     def _node_select(self, *args, **kwargs):
         """
