@@ -333,19 +333,12 @@ class MainWindow(qg.QMainWindow):
             for i, node in enumerate(selected.indexes()):
                 if node.row() != prev_row:
                     prev_row = node.row()
-                    print(node.row())
                     n = self.points.nodes_by_idx[node.row()]
                     n.show()
                     # TODO: Fix snap to only occur on list click, only snap to last selected point
 
                     if not n.isSelected():
                         n.setSelected(True)
-
-            selection = self.list.selectionModel().selectedRows()
-            if len(selection) > 0:
-                n = self.points.nodes_by_idx[selection[-1].row()]
-                self.view_slice(n.dfentry.z)
-                self.points.drawPoints()
 
             for node in deselected.indexes():
                 if node.row() != prev_row:
@@ -365,7 +358,15 @@ class MainWindow(qg.QMainWindow):
                         if node.isVisible() and self.z not in prev_scroll_range:
                             node.hide()
 
+            selection = self.list.selectionModel().selectedRows()
+            if len(selection) > 0:
+                n = self.points.nodes_by_idx[selection[-1].row()]
+                self.view_slice(n.dfentry.z)
+                self.points.drawPoints()
         self._prev_selected_slice = self.z
+
+
+
 
     def _open(self, *args, **kwargs):
         """
