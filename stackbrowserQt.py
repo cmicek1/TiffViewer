@@ -235,7 +235,7 @@ class MainWindow(qg.QMainWindow):
         # Values for amount of pixels to pan by (wrt original image size) and factor to zoom by. Hard coded for now,
         # but the plan is to have these as tunable options later, if desired.
         panvalue = 20
-        zoomfactor = 1.5
+        zoomfactor = 1.25
         k = event.key()
         pan_keys = [qc.Qt.Key_Left, qc.Qt.Key_Right, qc.Qt.Key_Up, qc.Qt.Key_Down, qc.Qt.Key_Enter, qc.Qt.Key_Return]
         zoom_keys = [qc.Qt.Key_Plus, qc.Qt.Key_Minus, qc.Qt.Key_Enter, qc.Qt.Key_Return]
@@ -335,7 +335,7 @@ class MainWindow(qg.QMainWindow):
                     prev_row = node.row()
                     n = self.points.nodes_by_idx[node.row()]
                     n.show()
-                    self.view_slice(n.dfentry.z)
+                    # self.view_slice(n.dfentry.z)
                     self.points.drawPoints()
                     if not n.isSelected():
                         n.setSelected(True)
@@ -474,6 +474,7 @@ class MainWindow(qg.QMainWindow):
         if key == qc.Qt.Key_Minus:  # Zoom out
             self.scale /= factor
             self.view.scale(1.0/factor, 1.0/factor)
+            self.view.viewport().resize(self.view.size())
             new_pos = self.view.mapToScene(self.view.mapFromGlobal(qg.QCursor.pos()))
             delta = new_pos - old_pos
             self.view.translate(delta.x(), delta.y())
