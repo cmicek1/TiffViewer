@@ -335,8 +335,6 @@ class MainWindow(qg.QMainWindow):
                     prev_row = node.row()
                     n = self.points.nodes_by_idx[node.row()]
                     n.show()
-                    # TODO: Fix snap to only occur on list click, only snap to last selected point
-
                     if not n.isSelected():
                         n.setSelected(True)
 
@@ -364,9 +362,6 @@ class MainWindow(qg.QMainWindow):
                 self.view_slice(n.dfentry.z)
                 self.points.drawPoints()
         self._prev_selected_slice = self.z
-
-
-
 
     def _open(self, *args, **kwargs):
         """
