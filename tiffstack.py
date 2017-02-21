@@ -14,6 +14,9 @@ NODE_DIR = 'nodes'
 SLAB_DIR = 'slabs'
 EDGE_DIR = 'edges'
 
+STACKDB_DIR = 'stackdb'
+LINE_DIR = 'line'
+
 # Scaling factor to go from um data to pixels for rendering
 # (number below is in um/pixel).
 DX = 0.216
@@ -40,29 +43,25 @@ class TiffStack:
         self.fname = os.path.basename(self.directory)
         _ = self.fname.split('_')
 
-        if len(_) == 2:
+        if len(_) == 3:
             try:
                 self.date, self.animal, self.channel = (_[0], _[1], _[2].split('.')[0])
             except IndexError:
                 pass
-            self.type = 'MapManager'
+            self.type = 'Spines'
             self.image = tf.TiffFile(self.directory)
             self.imarray = self.image.asarray()
-            self._node_dir = '{0}/{1}/{2}'.format(
+            self._stackdb_dir = '{0}/{1}/{2}'.format(
                 os.path.dirname(self.directory),
-                NODE_DIR, self.fname.split('ch')[0] + 'nT.txt')
-            self._slab_dir = '{0}/{1}/{2}'.format(
+                STACKDB_DIR, self.fname.split('ch')[0] + 'db2.txt')
+            self._line_dir = '{0}/{1}/{2}'.format(
                 os.path.dirname(self.directory),
-                SLAB_DIR, self.fname.split('ch')[0] + 'sD.txt')
-            self._edge_dir = '{0}/{1}/{2}'.format(
-                os.path.dirname(self.directory),
-                EDGE_DIR, self.fname.split('ch')[0] + 'eT.txt')
+                LINE_DIR, self.fname.split('ch')[0] + 'l.txt')
             self.node_db = nd.NodeDb(pd.read_csv(self._node_dir), DX, DY)
             self.slab_db = sd.SlabDb(pd.read_csv(self._slab_dir), DX, DY)
             self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
-            self.dx, self.dy = DX, DY
 
-        if len(_) == 3:
+        if len(_) == 4:
             try:
                 self.date, self.animal, self.stacknum, self.channel = (
                     _[0], _[1], int(_[2]), _[3].split('.')[0])
@@ -84,6 +83,7 @@ class TiffStack:
             self.node_db = nd.NodeDb(pd.read_csv(self._node_dir), DX, DY)
             self.slab_db = sd.SlabDb(pd.read_csv(self._slab_dir), DX, DY)
             self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
+            self.dx, self.dy = DX, DY
 
     def load(self, attr):
         """

@@ -15,3 +15,5 @@ class NodeDb:
         :type dy: float
         """
         self.dframe = dataframe
+        self.dx = dx
+        self.dy = dy
