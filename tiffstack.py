@@ -39,27 +39,51 @@ class TiffStack:
         self.directory = directory
         self.fname = os.path.basename(self.directory)
         _ = self.fname.split('_')
-        try:
-            self.date, self.animal, self.stacknum, self.channel = (
-                _[0], _[1], int(_[2]), _[3].split('.')[0])
-        except IndexError:
-            pass
 
-        self.image = tf.TiffFile(self.directory)
-        self.imarray = self.image.asarray()
-        self.dx, self.dy = DX, DY
-        self._node_dir = '{0}/{1}/{2}'.format(
-            os.path.dirname(self.directory),
-            NODE_DIR, self.fname.split('ch')[0] + 'nT.txt')
-        self._slab_dir = '{0}/{1}/{2}'.format(
-            os.path.dirname(self.directory),
-            SLAB_DIR, self.fname.split('ch')[0] + 'sD.txt')
-        self._edge_dir = '{0}/{1}/{2}'.format(
-            os.path.dirname(self.directory),
-            EDGE_DIR, self.fname.split('ch')[0] + 'eT.txt')
-        self.node_db = nd.NodeDb(pd.read_csv(self._node_dir), DX, DY)
-        self.slab_db = sd.SlabDb(pd.read_csv(self._slab_dir), DX, DY)
-        self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
+        if len(_) == 2:
+            try:
+                self.date, self.animal, self.channel = (_[0], _[1], _[2].split('.')[0])
+            except IndexError:
+                pass
+            self.type = 'MapManager'
+            self.image = tf.TiffFile(self.directory)
+            self.imarray = self.image.asarray()
+            self._node_dir = '{0}/{1}/{2}'.format(
+                os.path.dirname(self.directory),
+                NODE_DIR, self.fname.split('ch')[0] + 'nT.txt')
+            self._slab_dir = '{0}/{1}/{2}'.format(
+                os.path.dirname(self.directory),
+                SLAB_DIR, self.fname.split('ch')[0] + 'sD.txt')
+            self._edge_dir = '{0}/{1}/{2}'.format(
+                os.path.dirname(self.directory),
+                EDGE_DIR, self.fname.split('ch')[0] + 'eT.txt')
+            self.node_db = nd.NodeDb(pd.read_csv(self._node_dir), DX, DY)
+            self.slab_db = sd.SlabDb(pd.read_csv(self._slab_dir), DX, DY)
+            self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
+            self.dx, self.dy = DX, DY
+
+        if len(_) == 3:
+            try:
+                self.date, self.animal, self.stacknum, self.channel = (
+                    _[0], _[1], int(_[2]), _[3].split('.')[0])
+            except IndexError:
+                pass
+            self.type = 'Vascular'
+            self.image = tf.TiffFile(self.directory)
+            self.imarray = self.image.asarray()
+            self.dx, self.dy = DX, DY
+            self._node_dir = '{0}/{1}/{2}'.format(
+                os.path.dirname(self.directory),
+                NODE_DIR, self.fname.split('ch')[0] + 'nT.txt')
+            self._slab_dir = '{0}/{1}/{2}'.format(
+                os.path.dirname(self.directory),
+                SLAB_DIR, self.fname.split('ch')[0] + 'sD.txt')
+            self._edge_dir = '{0}/{1}/{2}'.format(
+                os.path.dirname(self.directory),
+                EDGE_DIR, self.fname.split('ch')[0] + 'eT.txt')
+            self.node_db = nd.NodeDb(pd.read_csv(self._node_dir), DX, DY)
+            self.slab_db = sd.SlabDb(pd.read_csv(self._slab_dir), DX, DY)
+            self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
 
     def load(self, attr):
         """
@@ -74,7 +98,7 @@ class TiffStack:
         if attr in self.__dict__.keys():
             if attr.endswith('db'):
                 to_load = pd.read_csv(to_load)
-                if attr in ['node_db', 'slab_db']:
+                if self.type == 'Vascular' and attr in ['node_db', 'slab_db']:
                     n = self.__dict__[attr].__class__(to_load, DX, DY)
                     print(n)
                     self.__dict__[attr] = n
