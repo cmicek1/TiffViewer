@@ -2,20 +2,19 @@ import os
 import tifffile as tf
 import Tkinter as Tk
 import tkFileDialog
-import numpy as np
-from skimage import exposure
 import pandas as pd
 import igraph as ig
 import nodedb as nd
 import slabdb as sd
 import edgedb as ed
+import stackdb
 
 NODE_DIR = 'nodes'
 SLAB_DIR = 'slabs'
 EDGE_DIR = 'edges'
 
-STACKDB_DIR = 'stackdb'
-LINE_DIR = 'line'
+STACKDB_DIR = '../stackdb'
+LINE_DIR = '../line'
 
 # Scaling factor to go from um data to pixels for rendering
 # (number below is in um/pixel).
@@ -57,10 +56,7 @@ class TiffStack:
             self._line_dir = '{0}/{1}/{2}'.format(
                 os.path.dirname(self.directory),
                 LINE_DIR, self.fname.split('ch')[0] + 'l.txt')
-            self.node_db = nd.NodeDb(pd.read_csv(self._node_dir), DX, DY)
-            self.slab_db = sd.SlabDb(pd.read_csv(self._slab_dir), DX, DY)
-            self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
-
+            self.stack_db = stackdb.StackDb(self._stackdb_dir)
         if len(_) == 4:
             try:
                 self.date, self.animal, self.stacknum, self.channel = (
