@@ -8,6 +8,7 @@ import nodedb as nd
 import slabdb as sd
 import edgedb as ed
 import stackdb
+import linedb as ld
 
 NODE_DIR = 'nodes'
 SLAB_DIR = 'slabs'
@@ -57,6 +58,12 @@ class TiffStack:
                 os.path.dirname(self.directory),
                 LINE_DIR, self.fname.split('ch')[0] + 'l.txt')
             self.stack_db = stackdb.StackDb(self._stackdb_dir)
+            self.line_db = ld.LineDb(self._line_dir)
+            try:
+                self.dx = self.stack_db.dx
+                self.dy = self.stack_db.dy
+            except AttributeError:
+                pass
         if len(_) == 4:
             try:
                 self.date, self.animal, self.stacknum, self.channel = (
