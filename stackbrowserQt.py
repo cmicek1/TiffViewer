@@ -410,7 +410,12 @@ class MainWindow(qg.QMainWindow):
         self.z = 0
         self.view_slice(self.z)
         old = self.list.selectionModel()
-        pointModel = pt.PointTable(self.stack.node_db.dframe)
+        choice = None
+        if self.stack.type == 'Vascular':
+            choice = self.stack.node_db.dframe
+        elif self.stack.type == 'Spines':
+            choice = self.stack.stack_db.dframe
+        pointModel = pt.PointTable(choice)
         self.list.setModel(pointModel)
         self.list.selectionModel().selectionChanged.connect(lambda selected, deselected, func=self.action_handler: func(
             '_node_select', selected, deselected))
