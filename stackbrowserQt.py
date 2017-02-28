@@ -128,6 +128,7 @@ class MainWindow(qg.QMainWindow):
         self.list.setFont(qg.QFont("Arial", 10))
         self.list.setSelectionBehavior(qg.QAbstractItemView.SelectRows)
         self.leftToolbar.addWidget(self.list)
+        self.leftToolbar.hide()
 
     def action_handler(self, handle, *args, **kwargs):
         """
@@ -163,9 +164,10 @@ class MainWindow(qg.QMainWindow):
 
         # Simply resizes widgets contained in the application to be of the appropriate size when the window is first
         # shown.
-        size = self.splitter.size()
-        self.view.resize(size)
-        self.imageLabel.resize(size)
+        self.view.resize(self.splitter.width(), self.splitter.width())
+        self.imageLabel.resize(self.splitter.width(), self.splitter.width())
+        # TODO: Make this automatic!
+        self.resize(1032, 1141)
 
     def resizeEvent(self, event):
         """
