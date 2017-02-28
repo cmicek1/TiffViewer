@@ -2,6 +2,7 @@ import os
 import tifffile as tf
 import Tkinter as Tk
 import tkFileDialog
+import numpy as np
 import pandas as pd
 import igraph as ig
 import nodedb as nd
@@ -51,6 +52,7 @@ class TiffStack:
             self.type = 'Spines'
             self.image = tf.TiffFile(self.directory)
             self.imarray = self.image.asarray()
+            self.dtype = self.imarray.dtype
             self._stackdb_dir = '{0}/{1}/{2}'.format(
                 os.path.dirname(self.directory),
                 STACKDB_DIR, self.fname.split('ch')[0] + 'db2.txt')
@@ -63,7 +65,10 @@ class TiffStack:
                 self.dx = self.stack_db.dx
                 self.dy = self.stack_db.dy
             except AttributeError:
+                self.dx = DX
+                self.dy = DY
                 pass
+
         if len(_) == 4:
             try:
                 self.date, self.animal, self.stacknum, self.channel = (
@@ -73,6 +78,7 @@ class TiffStack:
             self.type = 'Vascular'
             self.image = tf.TiffFile(self.directory)
             self.imarray = self.image.asarray()
+            self.dtype = self.imarray.dtype
             self.dx, self.dy = DX, DY
             self._node_dir = '{0}/{1}/{2}'.format(
                 os.path.dirname(self.directory),
@@ -178,10 +184,18 @@ def adjust_contrast(stack_slice, new_min, new_max):
     :return: The requested slice with adjusted contrast
     :rtype: numpy.ndarray[][][int]
     """
-    stack_slice = (stack_slice - new_min * 1.0) * 255 / (new_max - new_min)
+    num_bits = 8
+    if stack_slice.dtype.name == 'uint16':
+        num_bits = 16
+
+    dtype = stack_slice.dtype.name
+
+    max_intensity = 2 ** num_bits - 1
+
+    stack_slice = (stack_slice - new_min * 1.0) * max_intensity / (new_max - new_min)
     stack_slice[stack_slice <= 0] = 0
-    stack_slice[stack_slice >= 255] = 255
-    return stack_slice.astype('uint8')
+    stack_slice[stack_slice >= max_intensity] = max_intensity
+    return stack_slice.astype(dtype)
 
 
 def new():

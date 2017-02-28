@@ -10,16 +10,12 @@ import Tkinter as Tk
 import tkFileDialog
 
 
-# Empty color palettes filled in during initialization; public to the whole module for later access
-GREEN = []
-RED = []
-
-
 class MainWindow(qg.QMainWindow):
     """
     Main application window for Qt Stack Browser. Subclasses QMainWindow, and serves as the top-level user interface
     for the application. It handles widget layout, file I/O, display, and user input.
     """
+
     def __init__(self):
         """
         Initializer for the Main Window. First calls QMainWindow initializer, then creates layout and UI with help
@@ -45,11 +41,12 @@ class MainWindow(qg.QMainWindow):
         self.image = None
         self._min_intensity = 7
         self._max_intensity = 255
+
+        # Empty color palettes filled in during initialization; public to the whole module for later access
+        self.GREEN = []
+        self.RED = []
+
         self.COLORTABLE = []
-        # Set default color table for 8-bit images
-        for i in range(256):
-            GREEN.append(qg.qRgb(i / 4, i, i / 2))
-            RED.append(qg.qRgb(i, i / 4, i / 4))
 
         self.splitter = setter.splitter
 
@@ -269,9 +266,9 @@ class MainWindow(qg.QMainWindow):
         a = ts.adjust_contrast(a, self._min_intensity, self._max_intensity)
         self.image = qg.QImage(a.tostring(), a.shape[0], a.shape[1], qg.QImage.Format_Indexed8)
         if self.channel == 1:
-            self.COLORTABLE = GREEN
+            self.COLORTABLE = self.GREEN
         elif self.channel == 2:
-            self.COLORTABLE = RED
+            self.COLORTABLE = self.RED
         self.image.setColorTable(self.COLORTABLE)
         p = qg.QPixmap.fromImage(self.image)
         self.imageLabel.setPixmap(p.scaled(self.imageLabel.width(), self.imageLabel.width()))
@@ -387,6 +384,7 @@ class MainWindow(qg.QMainWindow):
         if 'find_points' in kwargs:
             find_points = kwargs['find_points']
             stack = args[0]
+            self.stack = stack
 
         if not find_points:
             root = Tk.Tk()
@@ -405,6 +403,26 @@ class MainWindow(qg.QMainWindow):
                 self.open_stacks.append(stack)
             except MemoryError:
                 self.open_stacks[0] = stack
+
+        # Set default color table for appropriate bit size
+        bit_size = 8
+        if self.stack.dtype.name == 'uint16':
+            bit_size = 16
+            self.minContrastSpinBox.setRange(0, 2 ** bit_size - 1)
+            self.maxContrastSpinBox.setRange(0, 2 ** bit_size - 1)
+
+            self.minContrastBar.setRange(0, 2 ** bit_size - 1)
+            self.maxContrastBar.setRange(0, 2 ** bit_size - 1)
+
+            self._max_intensity = 2 ** bit_size - 1
+            self.maxContrastBar.setValue(self._max_intensity)
+
+        self.GREEN = []
+        self.RED = []
+
+        for i in range(2**bit_size):
+            self.GREEN.append(qg.qRgb(i / 4, i, i / 2))
+            self.RED.append(qg.qRgb(i, i / 4, i / 4))
 
         # Get min and max intensities if changed from default prior to load
         self._min_intensity = self.minContrastSpinBox.value()
@@ -442,7 +460,7 @@ class MainWindow(qg.QMainWindow):
         new_stack = self._change_view(qc.Qt.Key_Right, find_points=True)
         if new_stack is not None:
             win2 = MainWindow()
-            win2.action_handler('find_points', new_stack, find_points=True)
+            win2.action_handler('open', new_stack, find_points=True)
 
     def _pan(self, *args, **kwargs):
         """
@@ -558,7 +576,9 @@ class MainWindow(qg.QMainWindow):
 
         :type args: list[int]
 
-        :return: None
+        :return: None | a TiffStack instance of the next time point if 'find_points' is a keyword argument
+
+        :rtype: None | tiffstack.TiffStack
         """
         if self.stack is None:
             return
