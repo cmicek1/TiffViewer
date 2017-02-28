@@ -164,10 +164,11 @@ class MainWindow(qg.QMainWindow):
 
         # Simply resizes widgets contained in the application to be of the appropriate size when the window is first
         # shown.
-        self.view.resize(self.splitter.width(), self.splitter.width())
+        self.centralWidget().resize(self.centralWidget().width(), self.centralWidget().width())
+        self.splitter.resize(self.centralWidget().width(), self.centralWidget().width())
+        self.view.resize(self.centralWidget().width(), self.splitter.width())
         self.imageLabel.resize(self.splitter.width(), self.splitter.width())
-        # TODO: Make this automatic!
-        self.resize(1032, 1141)
+        self.resize(self.childrenRect().size())
 
     def resizeEvent(self, event):
         """
@@ -190,8 +191,9 @@ class MainWindow(qg.QMainWindow):
             self.points.drawPoints(resize=True)
         else:
             # Resize container widgets to new window size
-            self.view.resize(self.width(), self.width())
-            self.imageLabel.resize(self.width(), self.width())
+            pass
+            # self.view.resize(self.width(), self.width())
+            # self.imageLabel.resize(self.width(), self.width())
 
         qg.QMainWindow.resizeEvent(self, event)
 
