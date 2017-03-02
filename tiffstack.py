@@ -94,6 +94,10 @@ class TiffStack:
             self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
             self.dx, self.dy = DX, DY
 
+        if self.dtype.name == 'uint16':
+            self.imarray = np.floor(np.sqrt(self.imarray)).astype('uint8')
+            # self.imarray = self.imarray.view('uint8')[:, ::2, :]
+
     def load(self, attr):
         """
         Universal loading function; can reload any class attribute if stored in a file.
@@ -184,18 +188,10 @@ def adjust_contrast(stack_slice, new_min, new_max):
     :return: The requested slice with adjusted contrast
     :rtype: numpy.ndarray[][][int]
     """
-    num_bits = 8
-    if stack_slice.dtype.name == 'uint16':
-        num_bits = 16
-
-    dtype = stack_slice.dtype.name
-
-    max_intensity = 2 ** num_bits - 1
-
-    stack_slice = (stack_slice - new_min * 1.0) * max_intensity / (new_max - new_min)
+    stack_slice = (stack_slice - new_min * 1.0) * 255 / (new_max - new_min)
     stack_slice[stack_slice <= 0] = 0
-    stack_slice[stack_slice >= max_intensity] = max_intensity
-    return stack_slice.astype(dtype)
+    stack_slice[stack_slice >= 255] = 255
+    return stack_slice.astype('uint8')
 
 
 def new():
