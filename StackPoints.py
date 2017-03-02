@@ -1,5 +1,6 @@
 import PyQt4.QtCore as qc
 import PyQt4.QtGui as qg
+import VascManager as vm
 
 
 class DrawingPointsWidget(qg.QWidget):
@@ -31,6 +32,9 @@ class DrawingPointsWidget(qg.QWidget):
 
         # Want to pass reference to keep z up-to-date
         self.browser = browser
+        self.pointManager = None
+        if self.browser.stack.type == 'Vascular':
+            self.pointManager = vm.VascManager(self)
         self.scaleFactor = 1  # fraction of total
         self.isVisible = 1  # Show all points and edges by default
         self.offset = 1
