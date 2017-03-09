@@ -32,9 +32,9 @@ class DrawingPointsWidget(qg.QWidget):
 
         # Want to pass reference to keep z up-to-date
         self.browser = browser
-        self.pointManager = None
+        self.drawManager = None
         if self.browser.stack.type == 'Vascular':
-            self.pointManager = vm.VascManager(self)
+            self.drawManager = vm.VascManager(self)
         self.scaleFactor = 1  # fraction of total
         self.isVisible = 1  # Show all points and edges by default
         self.offset = 1
@@ -98,8 +98,10 @@ class DrawingPointsWidget(qg.QWidget):
         slab_pen = qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap)
         slab_brush = qg.QBrush(qc.Qt.cyan)
 
-        node_edge_pen = qg.QPen(qc.Qt.red, 1, qc.Qt.SolidLine, qc.Qt.RoundCap)
-        node_edge_brush = qg.QBrush(qc.Qt.red)
+        edge_pen = qg.QPen(qc.Qt.red, 1, qc.Qt.SolidLine, qc.Qt.RoundCap)
+
+        node_pen = qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap)
+        node_brush = qg.QBrush(qc.Qt.red)
 
         # Size of each node/slab's bounding box
         rectWidth = 7
@@ -127,42 +129,9 @@ class DrawingPointsWidget(qg.QWidget):
 
         loc_params = (xfactor, yfactor, xtranslate, ytranslate)
         rectSize = (rectWidth, rectHeight)
-        draw_tools = ((slab_pen, slab_brush), node_edge_pen, (node_edge_pen, node_edge_brush))
+        draw_tools = ((slab_pen, slab_brush), edge_pen, (node_pen, node_brush))
 
-        self.pointManager.setup_slabs(loc_params, rectSize, draw_tools)
-
-        # Change pen to Node specs
-        node_edge_pen.setWidth(7)
-
-        for node in self.browser.stack.node_db.dframe.itertuples():
-            n = self.Node(0.0, 0.0, rectWidth, rectHeight, dfentry=node, widget=self)
-            xpos = node.x * xfactor / self.browser.stack.dx + xtranslate
-            ypos = node.y * yfactor / self.browser.stack.dy + ytranslate
-            n.setPos(xpos - rectWidth/2, ypos - rectHeight/2)
-            n.setPen(node_edge_pen)
-            n.setBrush(node_edge_brush)
-            n.setZValue(n.zValue() + 1)
-            n.hide()
-            if node.z not in self.nodes:
-                self.nodes[node.z] = [n]
-            else:
-                self.nodes[node.z].append(n)
-            self.nodes_by_idx[node.i] = n
-            self.browser.scene.addItem(n)
-
-        for edge in self.browser.stack.edge_db.dframe.itertuples():
-            idx = edge.i
-            try:
-                e = self.Edge(widget=self, idx=idx, dfentry=edge, edge_segs=self.edge_segs[idx])
-                e.source = self.nodes_by_idx[e.dfentry.sourceIdx]
-                e.target = self.nodes_by_idx[e.dfentry.targetIdx]
-                for seg in e.edge_segs:
-                    for ep in seg.endpoints:
-                        if ep not in e.slabs:
-                            e.slabs.append(ep)
-                self.edges[idx] = e
-            except KeyError:
-                pass
+        self.drawManager.setup(loc_params, rectSize, draw_tools)
 
     def drawPoints(self, resize=False):
         """
