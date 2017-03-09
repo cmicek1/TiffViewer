@@ -49,7 +49,6 @@ class VascManager:
 
             time, prev_slab, prev_pos = self._connect_slabs(time, prev_slab, prev_pos, s, (xpos, ypos), edge_pen)
 
-    # TODO: Fix
     def _connect_slabs(self, time, prev_slab, prev_pos, cur_slab, cur_pos, edge_pen):
         # Connect each Slab that has a neighbor of the same edge index with an EdgeSegment
         entry = cur_slab.dfentry
@@ -57,11 +56,12 @@ class VascManager:
             prev_slab = cur_slab
             prev_xpos = cur_pos[0]
             prev_ypos = cur_pos[1]
+            time += 1
         else:
             if entry.edgeIdx == prev_slab.dfentry.edgeIdx and (
                         entry.i == prev_slab.dfentry.i + 1):
                 # Connect
-                es = sp.DrawingPointsWidget.EdgeSegment(0.0, 0.0, 0.0, 0.0, idx=entry.edgeIdx, widget=self)
+                es = sp.DrawingPointsWidget.EdgeSegment(0.0, 0.0, 0.0, 0.0, idx=entry.edgeIdx, widget=self.parent)
                 es.endpoints = [prev_slab, cur_slab]
                 es.setLine(prev_pos[0], prev_pos[1], cur_pos[0], cur_pos[1])
                 es.setPen(edge_pen)
