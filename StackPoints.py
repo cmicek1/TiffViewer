@@ -125,55 +125,11 @@ class DrawingPointsWidget(qg.QWidget):
         if ytranslate is None:
             ytranslate = 0
 
-        # Place all items in the correct position, and store them in dicts
-        time = 0
-        prev_slab = None
-        prev_xpos = 0
-        prev_ypos = 0
-        for slab in self.browser.stack.slab_db.dframe.itertuples():
-            s = self.Slab(0.0, 0.0, rectWidth, rectHeight, dfentry=slab, widget=self)
-            xpos = slab.x * xfactor / self.browser.stack.dx + xtranslate
-            ypos = slab.y * yfactor / self.browser.stack.dy + ytranslate
-            s.setPos(xpos - rectWidth/2, ypos - rectHeight/2)  # Note: Coordinates for QGraphicsEllipseItems are the
-            # upper-left corner of the item's bounding box,
-            # so need to translate to center
-            s.setPen(slab_pen)
-            s.setBrush(slab_brush)
-            s.setZValue(s.zValue() + 1)
-            s.hide()
+        loc_params = (xfactor, yfactor, xtranslate, ytranslate)
+        rectSize = (rectWidth, rectHeight)
+        draw_tools = ((slab_pen, slab_brush), node_edge_pen, (node_edge_pen, node_edge_brush))
 
-            if slab.z not in self.slabs:
-                self.slabs[slab.z] = [s]
-            else:
-                self.slabs[slab.z].append(s)
-            self.browser.scene.addItem(s)
-
-            # Connect each Slab that has a neighbor of the same edge index with an EdgeSegment
-            if time == 0:
-                prev_slab = s
-                prev_xpos = xpos
-                prev_ypos = ypos
-                time += 1
-            else:
-                if slab.edgeIdx == prev_slab.dfentry.edgeIdx and (
-                            slab.i == prev_slab.dfentry.i + 1):
-                    # Connect
-                    es = self.EdgeSegment(0.0, 0.0, 0.0, 0.0, idx=slab.edgeIdx, widget=self)
-                    es.endpoints = [prev_slab, s]
-                    xpos = slab.x * xfactor / self.browser.stack.dx + xtranslate
-                    ypos = slab.y * yfactor / self.browser.stack.dy + ytranslate
-                    es.setLine(prev_xpos, prev_ypos, xpos, ypos)
-                    es.setPen(node_edge_pen)
-                    es.hide()
-                    if slab.edgeIdx not in self.edge_segs:
-                        self.edge_segs[slab.edgeIdx] = [es]
-                    else:
-                        self.edge_segs[slab.edgeIdx].append(es)
-                    self.browser.scene.addItem(es)
-                prev_slab = s
-                prev_xpos = xpos
-                prev_ypos = ypos
-                time += 1
+        self.pointManager.setup_slabs(loc_params, rectSize, draw_tools)
 
         # Change pen to Node specs
         node_edge_pen.setWidth(7)

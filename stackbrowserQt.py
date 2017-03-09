@@ -78,9 +78,7 @@ class MainWindow(qg.QMainWindow):
 
         self.scene.addWidget(self.imageLabel)
 
-        # Add custom widget handling display of and interaction with any items overlaying the image
-        self.points = sps.DrawingPointsWidget(self)
-        self.scene.addWidget(self.points)
+
 
         # Add removable toolbars for useful interaction and information display
         self.leftToolbar = setter.toolBar
@@ -416,6 +414,11 @@ class MainWindow(qg.QMainWindow):
         self.view_slice(self.z)
         old = self.list.selectionModel()
         choice = None
+
+        # Add custom widget handling display of and interaction with any items overlaying the image
+        self.points = sps.DrawingPointsWidget(self)
+        self.scene.addWidget(self.points)
+
         if self.stack.type == 'Vascular':
             choice = self.stack.node_db.dframe
         elif self.stack.type == 'Spines':
