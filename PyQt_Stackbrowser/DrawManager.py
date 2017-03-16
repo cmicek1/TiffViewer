@@ -4,3 +4,6 @@ class DrawManager(object):
 
     def setup(self, *args):
         pass
+
+    def draw(self, *args):
+        pass

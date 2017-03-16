@@ -133,11 +133,10 @@ class DrawingPointsWidget(qg.QWidget):
 
         self.drawManager.setup(loc_params, rectSize, draw_tools)
 
-    def drawPoints(self, resize=False):
+    def draw(self, resize=False):
         """
-        Function to determine which items to show in the current browser view. Checks for Nodes and Slabs in the
-        current z slice +/- an offset value (1 slice by default), and EdgeSegments that have any visible endpoints,
-        and displays them. Also rescales all items if the window is resized.
+        Calls the draw method of this widget's drawManager, which is responsible for deciding how to draw the
+        graphics items for the particular stack type.
 
         :param resize: A boolean indicating if the call for this function occurred during a resize event.
 
@@ -146,137 +145,139 @@ class DrawingPointsWidget(qg.QWidget):
         :return: None
         """
 
-        # If overlay is not visible, do nothing
-        if not self.isVisible:
-            return
+        self.drawManager.draw(resize)
 
-        # Else, set offset from current z to search for items to be shown
-        offset = self.offset
-
-        # Calculate min slice in range
-        d1 = int(self.browser.z - offset)
-        prev = d1 - 1
-        if d1 < 0:
-            d1 = 0
-            prev = None
-
-        # If scrolling down, hide items in previous uppermost visible slice (if not selected)
-        if prev is not None:
-            if prev in self.slabs:
-                for s in self.slabs[prev]:
-                    try:
-                        if not self.edges[s.dfentry.edgeIdx].isSelected():
-                            s.hide()
-                        if s.dfentry.edgeIdx in self.edge_segs:
-                            for es in self.edge_segs[s.dfentry.edgeIdx]:
-                                if es.endpoints[0].dfentry.z <= prev and es.endpoints[1].dfentry.z <= prev and not (
-                                    self.edges[es.idx].isSelected()
-                                ):
-                                    es.hide()
-                    except KeyError:
-                        pass
-
-            if prev in self.nodes:
-                for n in self.nodes[prev]:
-                    eList = n.dfentry.edgeList
-                    selected = False
-                    if not eList != eList:
-                        eList = eList.split(';')[0:-1]
-                        for idx in eList:
-                            try:
-                                if self.edges[int(idx)].isSelected():
-                                    selected = True
-                            except KeyError:
-                                pass
-                    if not n.isSelected() and not selected:
-                        n.hide()
-
-        # Calculate max slice of range
-        d2 = int(self.browser.z + offset)
-        nxt = d2 + 1
-        if d2 > self.browser.stack.maxz:
-            d2 = int(self.browser.stack.maxz)
-            nxt = None
-
-        # If scrolling up, hide items in previous lowermost visible slice
-        if nxt is not None:
-            if nxt in self.slabs:
-                for s in self.slabs[nxt]:
-                    try:
-                        if not self.edges[s.dfentry.edgeIdx].isSelected():
-                            s.hide()
-                        if s.dfentry.edgeIdx in self.edge_segs:
-                            for es in self.edge_segs[s.dfentry.edgeIdx]:
-                                if es.endpoints[0].dfentry.z >= nxt and es.endpoints[1].dfentry.z >= nxt and not (
-                                    self.edges[es.idx].isSelected()
-                                ):
-                                    es.hide()
-                    except KeyError:
-                        pass
-
-            if nxt in self.nodes:
-                for n in self.nodes[nxt]:
-                    eList = n.dfentry.edgeList
-                    selected = False
-                    if not eList != eList:
-                        eList = eList.split(';')[0:-1]
-                        for idx in eList:
-                            try:
-                                if self.edges[int(idx)].isSelected():
-                                    selected = True
-                            except KeyError:
-                                pass
-                    if not n.isSelected() and not selected:
-                        n.hide()
-
-        # Check scale out of scope so the current stored scale can be modified
-        scale = float(self.browser.splitter.width()) / self.browser.stack.imarray.shape[1]
-
-        if resize:  # Scale all items (both visible and invisible) via a linear iteration through each member dict,
-            # so scales of all items are easy to keep track of
-            for k in self.slabs:
-                for s in self.slabs[k]:
-                    s.setPos(s.pos() / self.cur_scale * scale)
-            for idx in self.edge_segs:
-                # Handle error case of edge with one slab (shouldn't occur, but can if there was an error in the
-                # creation of the initial text file)
-                try:
-                    for es in self.edge_segs[idx]:
-                        temp = es.line()
-                        temp.setPoints(es.line().p1() / self.cur_scale * scale,
-                                       es.line().p2() / self.cur_scale * scale)
-                        es.setLine(temp)
-                except KeyError:
-                    pass
-            for k in self.nodes:
-                for n in self.nodes[k]:
-                    n.setPos(n.pos() / self.cur_scale * scale)
-
-        for z in range(d1, d2 + 1):
-            visible_edges = []
-            if z in self.slabs:
-                for s in self.slabs[z]:
-                    try:  # Faster to handle exceptions than check slabs
-                        _ = self.edge_segs[s.dfentry.edgeIdx]
-                        s.show()
-                        if s.dfentry.edgeIdx not in visible_edges:
-                            visible_edges.append(s.dfentry.edgeIdx)
-                    except KeyError:
-                        pass
-
-                for idx in visible_edges:
-                    try:
-                        for es in self.edge_segs[idx]:
-                            if es.endpoints[0].isVisible() or es.endpoints[1].isVisible():
-                                es.show()
-                    except KeyError:
-                        pass
-
-            if z in self.nodes:
-                for n in self.nodes[z]:
-                    n.show()
-
-        self.cur_scale = scale
+        # # If overlay is not visible, do nothing
+        # if not self.isVisible:
+        #     return
+        #
+        # # Else, set offset from current z to search for items to be shown
+        # offset = self.offset
+        #
+        # # Calculate min slice in range
+        # d1 = int(self.browser.z - offset)
+        # prev = d1 - 1
+        # if d1 < 0:
+        #     d1 = 0
+        #     prev = None
+        #
+        # # If scrolling down, hide items in previous uppermost visible slice (if not selected)
+        # if prev is not None:
+        #     if prev in self.slabs:
+        #         for s in self.slabs[prev]:
+        #             try:
+        #                 if not self.edges[s.dfentry.edgeIdx].isSelected():
+        #                     s.hide()
+        #                 if s.dfentry.edgeIdx in self.edge_segs:
+        #                     for es in self.edge_segs[s.dfentry.edgeIdx]:
+        #                         if es.endpoints[0].dfentry.z <= prev and es.endpoints[1].dfentry.z <= prev and not (
+        #                             self.edges[es.idx].isSelected()
+        #                         ):
+        #                             es.hide()
+        #             except KeyError:
+        #                 pass
+        #
+        #     if prev in self.nodes:
+        #         for n in self.nodes[prev]:
+        #             eList = n.dfentry.edgeList
+        #             selected = False
+        #             if not eList != eList:
+        #                 eList = eList.split(';')[0:-1]
+        #                 for idx in eList:
+        #                     try:
+        #                         if self.edges[int(idx)].isSelected():
+        #                             selected = True
+        #                     except KeyError:
+        #                         pass
+        #             if not n.isSelected() and not selected:
+        #                 n.hide()
+        #
+        # # Calculate max slice of range
+        # d2 = int(self.browser.z + offset)
+        # nxt = d2 + 1
+        # if d2 > self.browser.stack.maxz:
+        #     d2 = int(self.browser.stack.maxz)
+        #     nxt = None
+        #
+        # # If scrolling up, hide items in previous lowermost visible slice
+        # if nxt is not None:
+        #     if nxt in self.slabs:
+        #         for s in self.slabs[nxt]:
+        #             try:
+        #                 if not self.edges[s.dfentry.edgeIdx].isSelected():
+        #                     s.hide()
+        #                 if s.dfentry.edgeIdx in self.edge_segs:
+        #                     for es in self.edge_segs[s.dfentry.edgeIdx]:
+        #                         if es.endpoints[0].dfentry.z >= nxt and es.endpoints[1].dfentry.z >= nxt and not (
+        #                             self.edges[es.idx].isSelected()
+        #                         ):
+        #                             es.hide()
+        #             except KeyError:
+        #                 pass
+        #
+        #     if nxt in self.nodes:
+        #         for n in self.nodes[nxt]:
+        #             eList = n.dfentry.edgeList
+        #             selected = False
+        #             if not eList != eList:
+        #                 eList = eList.split(';')[0:-1]
+        #                 for idx in eList:
+        #                     try:
+        #                         if self.edges[int(idx)].isSelected():
+        #                             selected = True
+        #                     except KeyError:
+        #                         pass
+        #             if not n.isSelected() and not selected:
+        #                 n.hide()
+        #
+        # # Check scale out of scope so the current stored scale can be modified
+        # scale = float(self.browser.splitter.width()) / self.browser.stack.imarray.shape[1]
+        #
+        # if resize:  # Scale all items (both visible and invisible) via a linear iteration through each member dict,
+        #     # so scales of all items are easy to keep track of
+        #     for k in self.slabs:
+        #         for s in self.slabs[k]:
+        #             s.setPos(s.pos() / self.cur_scale * scale)
+        #     for idx in self.edge_segs:
+        #         # Handle error case of edge with one slab (shouldn't occur, but can if there was an error in the
+        #         # creation of the initial text file)
+        #         try:
+        #             for es in self.edge_segs[idx]:
+        #                 temp = es.line()
+        #                 temp.setPoints(es.line().p1() / self.cur_scale * scale,
+        #                                es.line().p2() / self.cur_scale * scale)
+        #                 es.setLine(temp)
+        #         except KeyError:
+        #             pass
+        #     for k in self.nodes:
+        #         for n in self.nodes[k]:
+        #             n.setPos(n.pos() / self.cur_scale * scale)
+        #
+        # for z in range(d1, d2 + 1):
+        #     visible_edges = []
+        #     if z in self.slabs:
+        #         for s in self.slabs[z]:
+        #             try:  # Faster to handle exceptions than check slabs
+        #                 _ = self.edge_segs[s.dfentry.edgeIdx]
+        #                 s.show()
+        #                 if s.dfentry.edgeIdx not in visible_edges:
+        #                     visible_edges.append(s.dfentry.edgeIdx)
+        #             except KeyError:
+        #                 pass
+        #
+        #         for idx in visible_edges:
+        #             try:
+        #                 for es in self.edge_segs[idx]:
+        #                     if es.endpoints[0].isVisible() or es.endpoints[1].isVisible():
+        #                         es.show()
+        #             except KeyError:
+        #                 pass
+        #
+        #     if z in self.nodes:
+        #         for n in self.nodes[z]:
+        #             n.show()
+        #
+        # self.cur_scale = scale
 
     class Node(qg.QGraphicsEllipseItem):
         """
@@ -365,7 +366,7 @@ class DrawingPointsWidget(qg.QWidget):
                     self.setBrush(qc.Qt.red)
                     self.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
                     self.hide()
-                    self.widget.drawPoints()
+                    self.widget.draw()
                     self.widget.browser.action_handler('_node_select', self, deselect=True)
             return qg.QGraphicsEllipseItem.itemChange(self, change, value)
 
@@ -422,7 +423,7 @@ class DrawingPointsWidget(qg.QWidget):
                     self.widget.edges[self.dfentry.edgeIdx].setSelect(True)
                 else:
                     self.widget.edges[self.dfentry.edgeIdx].setSelect(False)
-                    self.widget.drawPoints()
+                    self.widget.draw()
             return qg.QGraphicsEllipseItem.itemChange(self, change, value)
 
     class EdgeSegment(qg.QGraphicsLineItem):
@@ -498,7 +499,7 @@ class DrawingPointsWidget(qg.QWidget):
                     self.widget.edges[self.idx].setSelect(True)
                 else:
                     self.widget.edges[self.idx].setSelect(False)
-                    self.widget.drawPoints()
+                    self.widget.draw()
             return qg.QGraphicsLineItem.itemChange(self, change, value)
 
     class Edge:  # Could make this an invisible QGraphicsItem if necessary

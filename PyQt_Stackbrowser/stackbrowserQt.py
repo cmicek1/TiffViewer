@@ -186,7 +186,7 @@ class MainWindow(qg.QMainWindow):
             self.imageLabel.resize(self.splitter.width(), self.splitter.width())
 
             # Now draw new nodes
-            self.points.drawPoints(resize=True)
+            self.points.draw(resize=True)
         else:
             # Resize container widgets to new window size
             pass
@@ -221,7 +221,7 @@ class MainWindow(qg.QMainWindow):
             self.view_slice(self.z)
 
             # Now draw new nodes
-            self.points.drawPoints(self._ptresize)
+            self.points.draw(self._ptresize)
 
     def keyPressEvent(self, event):
         """
@@ -285,7 +285,7 @@ class MainWindow(qg.QMainWindow):
             toplevel = _args[0]
         if toplevel is not None and toplevel:
             self.points.cur_scale = float(self.splitter.width()) / self.stack.imarray.shape[1]
-            self.points.drawPoints(resize=True)
+            self.points.draw(resize=True)
 
     def _node_select(self, *args, **kwargs):
         """
@@ -363,7 +363,7 @@ class MainWindow(qg.QMainWindow):
             if len(selection) > 0:
                 n = self.points.nodes_by_idx[selection[-1].row()]
                 self.view_slice(n.dfentry.z)
-                self.points.drawPoints()
+                self.points.draw()
         self._prev_selected_slice = self.z
 
     def _open(self, *args, **kwargs):
@@ -437,7 +437,7 @@ class MainWindow(qg.QMainWindow):
         self.imageLabel.resize(self.splitter.width(), self.splitter.width())
 
         # Now draw new nodes
-        self.points.drawPoints(resize=True)
+        self.points.draw(resize=True)
 
         self.minContrastSpinBox.valueChanged.connect(self._change_min_intensity)
         self.maxContrastSpinBox.valueChanged.connect(self._change_max_intensity)

@@ -4,6 +4,8 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/PyQt Stackbrowser" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Pygame Stackbrowser" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/PyQt_Stackbrowser" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Pygame_Stackbrowser" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
     </content>
     <orderEntry type="jdk" jdkName="Python 2.7.11 (C:\Users\cudmore\Anaconda2\python.exe)" jdkType="Python SDK" />
