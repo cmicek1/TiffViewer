@@ -4,7 +4,7 @@ Newest stack browser version built using PyQt4. Allows browsing of multi-page TI
 * __Vascular Mode:__ Collections of nodes, edges, and slabs (i.e. Nodes and edges from graphs, with slabs as points along edges serving as morphology descriptors)
 * __Spine Mode:__ Collections of points and lines (where points and lines are unrelated)
 
-To run the stack browser, ensure all files in the "PyQt Stackbrowser" folder are in your working directory, then run __stackbrowserQt.py__.
+To run the stack browser, ensure all files in the "PyQt_Stackbrowser" folder are in your working directory, then run __stackbrowserQt.py__.
 
 Using a pre-packaged Python distribution such as Anaconda is strongly recommended.
 
