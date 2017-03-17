@@ -147,6 +147,9 @@ class VascManager(dm.DrawManager):
         # Else, set offset from current z to search for items to be shown
         offset = self.parent.offset
 
+        slab_parent_idx_name = 'edgeIdx'
+        node_parent_list_name = 'edgeList'
+
         # Calculate min slice in range
         d1 = int(self.parent.browser.z - offset)
         prev = d1 - 1
@@ -156,35 +159,7 @@ class VascManager(dm.DrawManager):
 
         # TODO: Make this function more modular - split into chunks!
         # If scrolling down, hide items in previous uppermost visible slice (if not selected)
-        if prev is not None:
-            if prev in self.parent.slabs:
-                for s in self.parent.slabs[prev]:
-                    try:
-                        if not self.parent.edges[s.dfentry.edgeIdx].isSelected():
-                            s.hide()
-                        if s.dfentry.edgeIdx in self.parent.edge_segs:
-                            for es in self.parent.edge_segs[s.dfentry.edgeIdx]:
-                                if es.endpoints[0].dfentry.z <= prev and es.endpoints[1].dfentry.z <= prev and not (
-                                    self.parent.edges[es.idx].isSelected()
-                                ):
-                                    es.hide()
-                    except KeyError:
-                        pass
-
-            if prev in self.parent.nodes:
-                for n in self.parent.nodes[prev]:
-                    eList = n.dfentry.edgeList
-                    selected = False
-                    if not eList != eList:
-                        eList = eList.split(';')[0:-1]
-                        for idx in eList:
-                            try:
-                                if self.parent.edges[int(idx)].isSelected():
-                                    selected = True
-                            except KeyError:
-                                pass
-                    if not n.isSelected() and not selected:
-                        n.hide()
+        self.hide_slice(prev, 'down', lnIdx_attrName=slab_parent_idx_name, ptParent_attrName=node_parent_list_name)
 
         # Calculate max slice of range
         d2 = int(self.parent.browser.z + offset)
@@ -194,35 +169,7 @@ class VascManager(dm.DrawManager):
             nxt = None
 
         # If scrolling up, hide items in previous lowermost visible slice
-        if nxt is not None:
-            if nxt in self.parent.slabs:
-                for s in self.parent.slabs[nxt]:
-                    try:
-                        if not self.parent.edges[s.dfentry.edgeIdx].isSelected():
-                            s.hide()
-                        if s.dfentry.edgeIdx in self.parent.edge_segs:
-                            for es in self.parent.edge_segs[s.dfentry.edgeIdx]:
-                                if es.endpoints[0].dfentry.z >= nxt and es.endpoints[1].dfentry.z >= nxt and not (
-                                    self.parent.edges[es.idx].isSelected()
-                                ):
-                                    es.hide()
-                    except KeyError:
-                        pass
-
-            if nxt in self.parent.nodes:
-                for n in self.parent.nodes[nxt]:
-                    eList = n.dfentry.edgeList
-                    selected = False
-                    if not eList != eList:
-                        eList = eList.split(';')[0:-1]
-                        for idx in eList:
-                            try:
-                                if self.parent.edges[int(idx)].isSelected():
-                                    selected = True
-                            except KeyError:
-                                pass
-                    if not n.isSelected() and not selected:
-                        n.hide()
+        self.hide_slice(nxt, 'up', lnIdx_attrName=slab_parent_idx_name, ptParent_attrName=node_parent_list_name)
 
         # Check scale out of scope so the current stored scale can be modified
         scale = float(self.parent.browser.splitter.width()) / self.parent.browser.stack.imarray.shape[1]
