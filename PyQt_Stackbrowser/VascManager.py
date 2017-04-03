@@ -157,7 +157,6 @@ class VascManager(dm.DrawManager):
             d1 = 0
             prev = None
 
-        # TODO: Make this function more modular - split into chunks!
         # If scrolling down, hide items in previous uppermost visible slice (if not selected)
         self.hide_slice(prev, 'down', lnIdx_attrName=slab_parent_idx_name, ptParent_attrName=node_parent_list_name)
 
@@ -174,48 +173,9 @@ class VascManager(dm.DrawManager):
         # Check scale out of scope so the current stored scale can be modified
         scale = float(self.parent.browser.splitter.width()) / self.parent.browser.stack.imarray.shape[1]
 
-        if resize:  # Scale all items (both visible and invisible) via a linear iteration through each member dict,
-            # so scales of all items are easy to keep track of
-            for k in self.parent.slabs:
-                for s in self.parent.slabs[k]:
-                    s.setPos(s.pos() / self.parent.cur_scale * scale)
-            for idx in self.parent.edge_segs:
-                # Handle error case of edge with one slab (shouldn't occur, but can if there was an error in the
-                # creation of the initial text file)
-                try:
-                    for es in self.parent.edge_segs[idx]:
-                        temp = es.line()
-                        temp.setPoints(es.line().p1() / self.parent.cur_scale * scale,
-                                       es.line().p2() / self.parent.cur_scale * scale)
-                        es.setLine(temp)
-                except KeyError:
-                    pass
-            for k in self.parent.nodes:
-                for n in self.parent.nodes[k]:
-                    n.setPos(n.pos() / self.parent.cur_scale * scale)
+        if resize:
+            self.resize()
 
-        for z in range(d1, d2 + 1):
-            visible_edges = []
-            if z in self.parent.slabs:
-                for s in self.parent.slabs[z]:
-                    try:  # Faster to handle exceptions than check slabs
-                        _ = self.parent.edge_segs[s.dfentry.edgeIdx]
-                        s.show()
-                        if s.dfentry.edgeIdx not in visible_edges:
-                            visible_edges.append(s.dfentry.edgeIdx)
-                    except KeyError:
-                        pass
-
-                for idx in visible_edges:
-                    try:
-                        for es in self.parent.edge_segs[idx]:
-                            if es.endpoints[0].isVisible() or es.endpoints[1].isVisible():
-                                es.show()
-                    except KeyError:
-                        pass
-
-            if z in self.parent.nodes:
-                for n in self.parent.nodes[z]:
-                    n.show()
+        self.display(d1, d2, lnIdx_attrName=slab_parent_idx_name)
 
         self.parent.cur_scale = scale
