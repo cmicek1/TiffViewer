@@ -91,7 +91,7 @@ class TiffStack:
                 EDGE_DIR, self.fname.split('ch')[0] + 'eT.txt')
             self.node_db = nd.NodeDb(pd.read_csv(self._node_dir), DX, DY)
             self.slab_db = sd.SlabDb(pd.read_csv(self._slab_dir), DX, DY)
-            self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir, delimiter='\t'))
+            self.edge_db = ed.EdgeDb(pd.read_csv(self._edge_dir))
             self.dx, self.dy = DX, DY
 
         if self.dtype.name == 'uint16':
