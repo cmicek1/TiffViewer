@@ -304,11 +304,12 @@ class DrawingPointsWidget(qg.QWidget):
             self.setFlag(qg.QGraphicsItem.ItemIsSelectable)
             self.dfentry = None
             self.label = None
+            self.isspine = False
+            if 'widget' in kwargs:
+                self.widget = kwargs['widget']
             if 'dfentry' in kwargs:
                 self.dfentry = kwargs['dfentry']
                 self.label = self._Label(self)
-            if 'widget' in kwargs:
-                self.widget = kwargs['widget']
 
         class _Label(qg.QGraphicsSimpleTextItem):
             def __init__(self, *_args):
@@ -316,7 +317,10 @@ class DrawingPointsWidget(qg.QWidget):
                 self.line = None
                 if self.parentItem():
                     parent = self.parentItem()
-                    self.setText("{}/z{}".format(parent.dfentry.i, parent.dfentry.z))
+                    if parent.widget.browser.stack.type == 'Vascular':
+                        self.setText("{}/z{}".format(parent.dfentry.i, parent.dfentry.z))
+                    elif parent.widget.browser.stack.type == 'Spines':
+                        self.setText("{}/z{}".format(parent.dfentry.Idx, parent.dfentry.z))
                     self.setFlags(qg.QGraphicsItem.ItemIsMovable | qg.QGraphicsItem.ItemSendsScenePositionChanges)
                     self.setFont(qg.QFont('Arial', 9))
                     self.setBrush(qg.QBrush(qc.Qt.white))

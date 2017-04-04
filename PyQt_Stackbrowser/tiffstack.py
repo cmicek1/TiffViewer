@@ -95,8 +95,8 @@ class TiffStack:
             self.dx, self.dy = DX, DY
 
         if self.dtype.name == 'uint16':
-            self.imarray = np.floor(np.sqrt(self.imarray)).astype('uint8')
-            # self.imarray = self.imarray.view('uint8')[:, ::2, :]
+            self.imarray = np.sqrt(self.imarray).astype('uint8')
+        #     # self.imarray = self.imarray.view('uint8')[:, ::2, :]
 
     def load(self, attr):
         """

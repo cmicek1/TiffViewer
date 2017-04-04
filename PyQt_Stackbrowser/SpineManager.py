@@ -11,9 +11,9 @@ class SpineManager(dm.DrawManager):
         self.parent = parent
 
     def setup(self, loc_params, rectSize, draw_tools):
-        self.setup_slabs(loc_params, rectSize, draw_tools)
-        self.setup_nodes(loc_params, rectSize, draw_tools)
-        self.setup_edges()
+        self.setup_spines(loc_params, rectSize, draw_tools)
+        # self.setup_slabs(loc_params, rectSize, draw_tools)
+        # self.setup_edges()
 
     def setup_slabs(self, loc_params, rectSize, draw_tools):
         xfactor = loc_params[0]
@@ -83,7 +83,7 @@ class SpineManager(dm.DrawManager):
 
         return time, prev_slab, (prev_xpos, prev_ypos)
 
-    def setup_nodes(self, loc_params, rectSize, draw_tools):
+    def setup_spines(self, loc_params, rectSize, draw_tools):
         xfactor = loc_params[0]
         yfactor = loc_params[1]
         xtranslate = loc_params[2]
@@ -95,7 +95,10 @@ class SpineManager(dm.DrawManager):
         node_pen = draw_tools[2][0]
         node_brush = draw_tools[2][1]
 
-        for node in self.parent.browser.stack.node_db.dframe.itertuples():
+        stack_df = self.parent.browser.stack.stack_db.dframe
+        spines = stack_df.loc[stack_df.roiType == 'spineROI']
+
+        for node in spines.itertuples():
             n = sp.DrawingPointsWidget.Node(0.0, 0.0, rectWidth, rectHeight, dfentry=node, widget=self.parent)
             xpos = node.x * xfactor / self.parent.browser.stack.dx + xtranslate
             ypos = node.y * yfactor / self.parent.browser.stack.dy + ytranslate
@@ -108,7 +111,7 @@ class SpineManager(dm.DrawManager):
                 self.parent.nodes[node.z] = [n]
             else:
                 self.parent.nodes[node.z].append(n)
-            self.parent.nodes_by_idx[node.i] = n
+            self.parent.nodes_by_idx[node.Idx] = n
             self.parent.browser.scene.addItem(n)
 
     def setup_edges(self):
