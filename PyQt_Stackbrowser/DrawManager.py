@@ -46,6 +46,8 @@ class DrawManager(object):
             if sliceZ in self.parent.nodes:
                 for n in self.parent.nodes[sliceZ]:
                     eList = getattr(n.dfentry, ptParent_attrName)
+                    if not type(eList) is list:
+                        eList = list(eList)
                     selected = False
                     if not eList != eList:
                         eList = eList.split(';')[0:-1]

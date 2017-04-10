@@ -55,6 +55,7 @@ class MainWindow(qg.QMainWindow):
 
         # Initialize the scene and the view of the application, the two most-often used attributes
         self.scene = qg.QGraphicsScene()
+        # TODO: Implement horizontal scroll?
         self.view = _MyGraphicsView(setter.graphicsView)  # Uses hidden class derived from QGraphicsView to suppress
                                                           # default scrolling behavior
 
@@ -417,7 +418,6 @@ class MainWindow(qg.QMainWindow):
 
         # Add custom widget handling display of and interaction with any items overlaying the image
         self.points = sps.DrawingPointsWidget(self)
-        self.scene.addWidget(self.points)
 
         if self.stack.type == 'Vascular':
             choice = self.stack.node_db.dframe
@@ -428,6 +428,8 @@ class MainWindow(qg.QMainWindow):
         self.list.selectionModel().selectionChanged.connect(lambda selected, deselected, func=self.action_handler: func(
             '_node_select', selected, deselected))
         del old
+
+        self.scene.addWidget(self.points)
 
         # Create initial overlay and internal representation of graph data
         self.points.initPoints()

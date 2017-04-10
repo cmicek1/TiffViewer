@@ -12,10 +12,10 @@ class SpineManager(dm.DrawManager):
 
     def setup(self, loc_params, rectSize, draw_tools):
         self.setup_spines(loc_params, rectSize, draw_tools)
-        # self.setup_slabs(loc_params, rectSize, draw_tools)
+        self.setup_lines(loc_params, rectSize, draw_tools)
         # self.setup_edges()
 
-    def setup_slabs(self, loc_params, rectSize, draw_tools):
+    def setup_lines(self, loc_params, rectSize, draw_tools):
         xfactor = loc_params[0]
         yfactor = loc_params[1]
         xtranslate = loc_params[2]
@@ -34,7 +34,7 @@ class SpineManager(dm.DrawManager):
         prev_slab = None
         prev_pos = (0, 0)
 
-        for slab in self.parent.browser.stack.slab_db.dframe.itertuples():
+        for slab in self.parent.browser.stack.line_db.dframe.itertuples():
             s = sp.DrawingPointsWidget.Slab(0.0, 0.0, rectWidth, rectHeight, dfentry=slab, widget=self.parent)
             xpos = slab.x * xfactor / self.parent.browser.stack.dx + xtranslate
             ypos = slab.y * yfactor / self.parent.browser.stack.dy + ytranslate
@@ -63,18 +63,18 @@ class SpineManager(dm.DrawManager):
             prev_ypos = cur_pos[1]
             time += 1
         else:
-            if entry.edgeIdx == prev_slab.dfentry.edgeIdx and (
-                        entry.i == prev_slab.dfentry.i + 1):
+            if entry.ID == prev_slab.dfentry.ID and (
+                        entry.prevNode == prev_slab.dfentry.prevNode + 1 or entry.prevNode == -1):
                 # Connect
-                es = sp.DrawingPointsWidget.EdgeSegment(0.0, 0.0, 0.0, 0.0, idx=entry.edgeIdx, widget=self.parent)
+                es = sp.DrawingPointsWidget.EdgeSegment(0.0, 0.0, 0.0, 0.0, idx=entry.ID, widget=self.parent)
                 es.endpoints = [prev_slab, cur_slab]
                 es.setLine(prev_pos[0], prev_pos[1], cur_pos[0], cur_pos[1])
                 es.setPen(edge_pen)
                 es.hide()
                 if entry.edgeIdx not in self.parent.edge_segs:
-                    self.parent.edge_segs[entry.edgeIdx] = [es]
+                    self.parent.edge_segs[entry.ID] = [es]
                 else:
-                    self.parent.edge_segs[entry.edgeIdx].append(es)
+                    self.parent.edge_segs[entry.ID].append(es)
                 self.parent.browser.scene.addItem(es)
             prev_slab = cur_slab
             prev_xpos = cur_pos[0]
@@ -115,13 +115,14 @@ class SpineManager(dm.DrawManager):
             self.parent.browser.scene.addItem(n)
 
     def setup_edges(self):
-        for edge in self.parent.browser.stack.edge_db.dframe.itertuples():
-            idx = edge.i
+        lines = self.parent.browser.stack.line_db_db.dframe
+        for edge in lines.loc[lines.prevNode == -1]:
+            idx = edge.ID
             try:
                 e = sp.DrawingPointsWidget.Edge(widget=self.parent, idx=idx, dfentry=edge,
                                                 edge_segs=self.parent.edge_segs[idx])
-                e.source = self.parent.nodes_by_idx[e.dfentry.sourceIdx]
-                e.target = self.parent.nodes_by_idx[e.dfentry.targetIdx]
+                # e.source = self.parent.nodes_by_idx[e.dfentry.sourceIdx]
+                # e.target = self.parent.nodes_by_idx[e.dfentry.targetIdx]
                 for seg in e.edge_segs:
                     for ep in seg.endpoints:
                         if ep not in e.slabs:
@@ -150,8 +151,8 @@ class SpineManager(dm.DrawManager):
         # Else, set offset from current z to search for items to be shown
         offset = self.parent.offset
 
-        slab_parent_idx_name = 'edgeIdx'
-        node_parent_list_name = 'edgeList'
+        slab_parent_idx_name = 'ID'
+        node_parent_list_name = 'parentID'
 
         # Calculate min slice in range
         d1 = int(self.parent.browser.z - offset)
