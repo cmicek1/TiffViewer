@@ -400,11 +400,11 @@ class MainWindow(qg.QMainWindow):
                 return
             self.channel = 1
 
-        if stack not in self.open_stacks:
+        if self.stack not in self.open_stacks:
             try:
-                self.open_stacks.append(stack)
+                self.open_stacks.append(self.stack)
             except MemoryError:
-                self.open_stacks[0] = stack
+                self.open_stacks[0] = self.stack
 
         # Get min and max intensities if changed from default prior to load
         self._min_intensity = self.minContrastSpinBox.value()
