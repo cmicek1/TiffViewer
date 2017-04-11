@@ -402,6 +402,8 @@ class DrawingPointsWidget(qg.QWidget):
                 self.dfentry = kwargs['dfentry']
             if 'widget' in kwargs:
                 self.widget = kwargs['widget']
+            if 'parent_idx_name' in kwargs:
+                self.parent_idx_name = kwargs['parent_idx_name']
 
         def paint(self, painter, option, widget=0):
             """
@@ -428,9 +430,9 @@ class DrawingPointsWidget(qg.QWidget):
                 # Note: Need to use '==' operator for condition to evaluate correctly. (Qt will cast the QVariant
                 # 'value' to a boolean when evaluating only if the boolean 'is equivalent' operator is used.)
                 if value == 1:
-                    self.widget.edges[self.dfentry.edgeIdx].setSelect(True)
+                    self.widget.edges[getattr(self.dfentry, self.parent_idx_name)].setSelect(True)
                 else:
-                    self.widget.edges[self.dfentry.edgeIdx].setSelect(False)
+                    self.widget.edges[getattr(self.dfentry, self.parent_idx_name)].setSelect(False)
                     self.widget.draw()
             return qg.QGraphicsEllipseItem.itemChange(self, change, value)
 
@@ -552,23 +554,24 @@ class DrawingPointsWidget(qg.QWidget):
                     s.setBrush(qc.Qt.cyan)
                     s.setPen(qg.QPen(qc.Qt.cyan, 4, qc.Qt.SolidLine, qc.Qt.RoundCap))
                     s.hide()
-            if selected:
-                self.source.setBrush(qc.Qt.red)
-                self.source.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
-                self.source.show()
+            if self.widget.browser.stack.type == 'Vascular':
+                if selected and self.widget.browser.stack.mode == 'Vascular':
+                    self.source.setBrush(qc.Qt.red)
+                    self.source.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    self.source.show()
 
-                self.target.setBrush(qc.Qt.green)
-                self.target.setPen(qg.QPen(qc.Qt.green, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
-                self.target.show()
+                    self.target.setBrush(qc.Qt.green)
+                    self.target.setPen(qg.QPen(qc.Qt.green, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    self.target.show()
 
-            else:
-                # self.source.setBrush(qc.Qt.red)
-                # self.source.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
-                self.source.hide()
+                else:
+                    # self.source.setBrush(qc.Qt.red)
+                    # self.source.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    self.source.hide()
 
-                self.target.setBrush(qc.Qt.red)
-                self.target.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
-                self.target.hide()
+                    self.target.setBrush(qc.Qt.red)
+                    self.target.setPen(qg.QPen(qc.Qt.red, 7, qc.Qt.SolidLine, qc.Qt.RoundCap))
+                    self.target.hide()
 
         def isSelected(self):
             return self._selected

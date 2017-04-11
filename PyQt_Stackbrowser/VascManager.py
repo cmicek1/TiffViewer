@@ -35,7 +35,8 @@ class VascManager(dm.DrawManager):
         prev_pos = (0, 0)
 
         for slab in self.parent.browser.stack.slab_db.dframe.itertuples():
-            s = sp.DrawingPointsWidget.Slab(0.0, 0.0, rectWidth, rectHeight, dfentry=slab, widget=self.parent)
+            s = sp.DrawingPointsWidget.Slab(0.0, 0.0, rectWidth, rectHeight, dfentry=slab, widget=self.parent,
+                                            parent_idx_name='edgeIdx')
             xpos = slab.x * xfactor / self.parent.browser.stack.dx + xtranslate
             ypos = slab.y * yfactor / self.parent.browser.stack.dy + ytranslate
             s.setPos(xpos - rectWidth/2, ypos - rectHeight/2)  # Note: Coordinates for QGraphicsEllipseItems are the

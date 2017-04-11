@@ -13,7 +13,7 @@ class SpineManager(dm.DrawManager):
     def setup(self, loc_params, rectSize, draw_tools):
         self.setup_spines(loc_params, rectSize, draw_tools)
         self.setup_lines(loc_params, rectSize, draw_tools)
-        # self.setup_edges()
+        self.setup_edges()
 
     def setup_lines(self, loc_params, rectSize, draw_tools):
         xfactor = loc_params[0]
@@ -35,7 +35,8 @@ class SpineManager(dm.DrawManager):
         prev_pos = (0, 0)
 
         for slab in self.parent.browser.stack.line_db.dframe.itertuples():
-            s = sp.DrawingPointsWidget.Slab(0.0, 0.0, rectWidth, rectHeight, dfentry=slab, widget=self.parent)
+            s = sp.DrawingPointsWidget.Slab(0.0, 0.0, rectWidth, rectHeight, dfentry=slab, widget=self.parent,
+                                            parent_idx_name='ID')
             xpos = slab.x * xfactor / self.parent.browser.stack.dx + xtranslate
             ypos = slab.y * yfactor / self.parent.browser.stack.dy + ytranslate
             s.setPos(xpos - rectWidth/2, ypos - rectHeight/2)  # Note: Coordinates for QGraphicsEllipseItems are the
@@ -71,7 +72,7 @@ class SpineManager(dm.DrawManager):
                 es.setLine(prev_pos[0], prev_pos[1], cur_pos[0], cur_pos[1])
                 es.setPen(edge_pen)
                 es.hide()
-                if entry.edgeIdx not in self.parent.edge_segs:
+                if entry.ID not in self.parent.edge_segs:
                     self.parent.edge_segs[entry.ID] = [es]
                 else:
                     self.parent.edge_segs[entry.ID].append(es)
@@ -115,8 +116,8 @@ class SpineManager(dm.DrawManager):
             self.parent.browser.scene.addItem(n)
 
     def setup_edges(self):
-        lines = self.parent.browser.stack.line_db_db.dframe
-        for edge in lines.loc[lines.prevNode == -1]:
+        lines = self.parent.browser.stack.line_db.dframe
+        for edge in lines.loc[lines.prevNode == -1].itertuples():
             idx = edge.ID
             try:
                 e = sp.DrawingPointsWidget.Edge(widget=self.parent, idx=idx, dfentry=edge,

@@ -36,4 +36,4 @@ class LineDb:
 
         if 'numHeaderRow' in self.data:
             skip = self.data['numHeaderRow'] + 2
-        self.dframe = pd.read_csv(fname, skiprows=skip)
+        self.dframe = pd.read_csv(fname, skiprows=skip, index_col=False)

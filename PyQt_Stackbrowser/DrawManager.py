@@ -27,7 +27,7 @@ class DrawManager(object):
                     try:
                         if not self.parent.edges[lnIdx].isSelected():
                             s.hide()
-                        if s.dfentry.edgeIdx in self.parent.edge_segs:
+                        if getattr(s.dfentry, lnIdx_attrName) in self.parent.edge_segs:
                             for es in self.parent.edge_segs[lnIdx]:
                                 cond = None
                                 if scroll_dir == 'down':
@@ -45,9 +45,7 @@ class DrawManager(object):
 
             if sliceZ in self.parent.nodes:
                 for n in self.parent.nodes[sliceZ]:
-                    eList = getattr(n.dfentry, ptParent_attrName)
-                    if not type(eList) is list:
-                        eList = list(eList)
+                    eList = str(getattr(n.dfentry, ptParent_attrName))
                     selected = False
                     if not eList != eList:
                         eList = eList.split(';')[0:-1]
@@ -98,7 +96,7 @@ class DrawManager(object):
                     try:  # Faster to handle exceptions than check slabs
                         _ = self.parent.edge_segs[lnIdx]
                         s.show()
-                        if s.dfentry.edgeIdx not in visible_edges:
+                        if lnIdx not in visible_edges:
                             visible_edges.append(lnIdx)
                     except KeyError:
                         pass
