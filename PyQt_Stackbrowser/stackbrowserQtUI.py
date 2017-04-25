@@ -91,7 +91,12 @@ class Ui_MainWindow(object):
         self.action_FindPoints = QtGui.QAction(MainWindow)
         self.action_FindPoints.setObjectName(_fromUtf8("action_FindPoints"))
 
+        self.action_PointList = QtGui.QAction(MainWindow)
+        self.action_PointList.setObjectName(_fromUtf8("action_PointList"))
+        self.action_PointList.setCheckable(True)
+
         self.menuView.addAction(self.action_FindPoints)
+        self.menuView.addAction(self.action_PointList)
         self.menubar.addAction(self.menuView.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -105,3 +110,4 @@ class Ui_MainWindow(object):
         self.toolBar_2.setWindowTitle(_translate("MainWindow", "toolBar_2", None))
         self.action_Open.setText(_translate("MainWindow", "&Open...", None))
         self.action_FindPoints.setText(_translate("MainWindow", "Find Points", None))
+        self.action_PointList.setText(_translate("MainWindow", "&Point List", None))

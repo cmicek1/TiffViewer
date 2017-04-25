@@ -32,6 +32,7 @@ class MainWindow(qg.QMainWindow):
 
         action_open.triggered.connect(lambda: self.action_handler('open'))
         setter.action_FindPoints.triggered.connect(lambda: self.action_handler('find_points'))
+        setter.action_PointList.toggled.connect(lambda change, func=self.action_handler: func('point_list', change))
 
         # Add additional relevant attributes
         self.stack = None
@@ -47,9 +48,10 @@ class MainWindow(qg.QMainWindow):
         self._max_intensity = 255
         self.COLORTABLE = []
         # Set default color table for 8-bit images
-        for i in range(256):
-            GREEN.append(qg.qRgb(i / 4, i, i / 2))
-            RED.append(qg.qRgb(i, i / 4, i / 4))
+        if len(GREEN) == 0 or len(RED) == 0:
+            for i in range(256):
+                GREEN.append(qg.qRgb(i / 4, i, i / 2))
+                RED.append(qg.qRgb(i, i / 4, i / 4))
 
         self.splitter = setter.splitter
 
@@ -78,8 +80,6 @@ class MainWindow(qg.QMainWindow):
         self.imageLabel.setPalette(palette)
 
         self.scene.addWidget(self.imageLabel)
-
-
 
         # Add removable toolbars for useful interaction and information display
         self.leftToolbar = setter.toolBar
@@ -145,7 +145,8 @@ class MainWindow(qg.QMainWindow):
         :return: None
         """
         valid_funcs = {'open': self._open, 'pan': self._pan, 'zoom': self._zoom, '_node_select': self._node_select,
-                       'change_view': self._change_view, 'find_points': self._find_points}
+                       'change_view': self._change_view, 'find_points': self._find_points,
+                       'point_list': self._point_list}
 
         valid_funcs[handle](*args, **kwargs)
 
@@ -382,11 +383,10 @@ class MainWindow(qg.QMainWindow):
         # Open a dialog box allowing the user to select a TiffStack to display. See tiffstack.py and the repository
         # README for more info.
         find_points = False
-        stack = self.stack
         if 'find_points' in kwargs:
             find_points = kwargs['find_points']
-            stack = args[0]
-            self.stack = stack
+            self.stack = args[0]
+
 
         if not find_points:
             root = Tk.Tk()
@@ -398,7 +398,10 @@ class MainWindow(qg.QMainWindow):
                 self.stack = ts.TiffStack(fpath)
             except IOError:
                 return
-            self.channel = 1
+        try:
+            self.channel = int(self.stack.channel.lstrip('ch'))
+        except AttributeError:
+            pass
 
         if self.stack not in self.open_stacks:
             try:
@@ -448,7 +451,12 @@ class MainWindow(qg.QMainWindow):
         new_stack = self._change_view(qc.Qt.Key_Right, find_points=True)
         if new_stack is not None:
             win2 = MainWindow()
+            win2.show()
             win2.action_handler('open', new_stack, find_points=True)
+
+    def _point_list(self, *args, **kwargs):
+        view = args[0]
+        self.leftToolbar.setVisible(view)
 
     def _pan(self, *args, **kwargs):
         """
@@ -571,7 +579,9 @@ class MainWindow(qg.QMainWindow):
         if self.stack is None:
             return
         dirpath = os.path.dirname(self.stack.directory)
-        flist = [f for f in os.listdir(dirpath) if f.endswith('.tif')]
+        flist = [f for f in os.listdir(dirpath) if f.endswith('.tif') and not f.startswith('._')]
+        if self.stack.type == 'Spines':
+            flist = sorted(flist, key=lambda f_name: int(f_name.split('_')[1].lstrip('s')))
         curr_index = flist.index(os.path.basename(self.stack.directory))
         fname = None
         key = args[0]
