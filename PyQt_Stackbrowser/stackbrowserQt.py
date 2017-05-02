@@ -166,7 +166,7 @@ class MainWindow(qg.QMainWindow):
         # shown.
         self.centralWidget().resize(self.centralWidget().width(), self.centralWidget().width())
         self.splitter.resize(self.centralWidget().width(), self.centralWidget().width())
-        self.view.resize(self.centralWidget().width(), self.splitter.width())
+        self.view.resize(self.splitter.width(), self.splitter.width())
         self.imageLabel.resize(self.splitter.width(), self.splitter.width())
         self.resize(self.childrenRect().size())
 
@@ -186,6 +186,7 @@ class MainWindow(qg.QMainWindow):
             self.view_slice(self.z)
             self.view.resize(self.splitter.width(), self.splitter.width())
             self.imageLabel.resize(self.splitter.width(), self.splitter.width())
+            self.scene.setSceneRect(qc.QRectF(0, 0, self.imageLabel.width() - 2, self.imageLabel.height() - 2))
 
             # Now draw new nodes
             self.points.draw(resize=True)
@@ -387,7 +388,6 @@ class MainWindow(qg.QMainWindow):
             find_points = kwargs['find_points']
             self.stack = args[0]
 
-
         if not find_points:
             root = Tk.Tk()
             root.attributes('-topmost', True)
@@ -440,6 +440,7 @@ class MainWindow(qg.QMainWindow):
         # Pseudo-resize to fix point alignment after adding toolbar widgets
         self.view.resize(self.splitter.width(), self.splitter.width())
         self.imageLabel.resize(self.splitter.width(), self.splitter.width())
+        self.scene.setSceneRect(qc.QRectF(0, 0, self.imageLabel.width() - 2, self.imageLabel.height() - 2))
 
         # Now draw new nodes
         self.points.draw(resize=True)
@@ -474,14 +475,31 @@ class MainWindow(qg.QMainWindow):
         key = args[0]
         panvalue = args[1]
         if self.stack is not None:
+            hbar = self.view.horizontalScrollBar()  # type: qg.QScrollBar
+            vbar = self.view.verticalScrollBar()  # type: qg.QScrollBar
+            hbar.setSingleStep(panvalue)
+            vbar.setSingleStep(panvalue)
+
             if key == qc.Qt.Key_Left:
-                self.view.move(self.view.x() - panvalue, self.view.y())
+                if hbar.value() < hbar.maximum():
+                    hbar.triggerAction(qg.QScrollBar.SliderSingleStepAdd)
+                else:
+                    self.view.move(self.view.x() - panvalue, self.view.y())
             if key == qc.Qt.Key_Right:
-                self.view.move(self.view.x() + panvalue, self.view.y())
+                if hbar.value() > hbar.minimum():
+                    hbar.triggerAction(qg.QScrollBar.SliderSingleStepSub)
+                else:
+                    self.view.move(self.view.x() + panvalue, self.view.y())
             if key == qc.Qt.Key_Up:
-                self.view.move(self.view.x(), self.view.y() - panvalue)
+                if vbar.value() < vbar.maximum():
+                    vbar.triggerAction(qg.QScrollBar.SliderSingleStepAdd)
+                else:
+                    self.view.move(self.view.x(), self.view.y() - panvalue)
             if key == qc.Qt.Key_Down:
-                self.view.move(self.view.x(), self.view.y() + panvalue)
+                if vbar.value() > vbar.minimum():
+                    vbar.triggerAction(qg.QScrollBar.SliderSingleStepSub)
+                else:
+                    self.view.move(self.view.x(), self.view.y() + panvalue)
             if key == qc.Qt.Key_Enter or key == qc.Qt.Key_Return:
                 print('reset image to full view and center')
                 self.view.move(0, 0)
@@ -653,23 +671,8 @@ class _MyGraphicsView(qg.QGraphicsView):
         """
         super(qg.QGraphicsView, self).__init__(uiview)
 
-    def scrollContentsBy(self, dx, dy):
-        """
-        Overloaded method of QAbstractScroll area, of which QGraphicsView is derived. Determines how much the current
-        view should scroll when its scroll bars are moved by dx and dy. This implementation does nothing because
-        the scrolling behavior of a QGraphicsView enabled by default conflicts with the intuitive scrolling by z slice
-        of the application.
-
-        :param dx: Number of pixels in the x direction the scroll bars have moved
-        :param dy: Number of pixels in the y direction the scroll bars have moved
-
-        :type dx: int
-        :type dy: int
-
-        :return: None
-        """
-        # Apparently this affects the transformation anchor
-        pass
+    def wheelEvent(self, event):
+        MainWindow.wheelEvent(self.window(), event)
 
 
 class StackOutOfBoundsException(Exception):
