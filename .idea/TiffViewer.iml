@@ -8,7 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Pygame_Stackbrowser" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 2.7.11 (C:\Users\cudmore\Anaconda2\python.exe)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 2.7.11 (C:\Users\Chris Micek\Anaconda2\python.exe)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="mapmanager_ipynb" />
   </component>

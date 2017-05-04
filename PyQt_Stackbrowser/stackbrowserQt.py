@@ -192,9 +192,9 @@ class MainWindow(qg.QMainWindow):
             self.points.draw(resize=True)
         else:
             # Resize container widgets to new window size
-            pass
-            # self.view.resize(self.width(), self.width())
-            # self.imageLabel.resize(self.width(), self.width())
+            self.view.resize(self.splitter.width(), self.splitter.width())
+            self.imageLabel.resize(self.splitter.width(), self.splitter.width())
+            self.imageLabel.resize(self.width(), self.width())
 
         qg.QMainWindow.resizeEvent(self, event)
 
@@ -481,22 +481,30 @@ class MainWindow(qg.QMainWindow):
             vbar.setSingleStep(panvalue)
 
             if key == qc.Qt.Key_Left:
-                if hbar.value() < hbar.maximum():
+                if self.view.mapToParent(qc.QPoint(0, 0)).x() > 0:
+                    self.view.move(self.view.x() - panvalue, self.view.y())
+                elif hbar.value() < hbar.maximum():
                     hbar.triggerAction(qg.QScrollBar.SliderSingleStepAdd)
                 else:
                     self.view.move(self.view.x() - panvalue, self.view.y())
             if key == qc.Qt.Key_Right:
-                if hbar.value() > hbar.minimum():
+                if self.view.mapToParent(qc.QPoint(0, 0)).x() < 0:
+                    self.view.move(self.view.x() + panvalue, self.view.y())
+                elif hbar.value() > hbar.minimum():
                     hbar.triggerAction(qg.QScrollBar.SliderSingleStepSub)
                 else:
                     self.view.move(self.view.x() + panvalue, self.view.y())
             if key == qc.Qt.Key_Up:
-                if vbar.value() < vbar.maximum():
+                if self.view.mapToParent(qc.QPoint(0, 0)).y() > 0:
+                    self.view.move(self.view.x(), self.view.y() - panvalue)
+                elif vbar.value() < vbar.maximum():
                     vbar.triggerAction(qg.QScrollBar.SliderSingleStepAdd)
                 else:
                     self.view.move(self.view.x(), self.view.y() - panvalue)
             if key == qc.Qt.Key_Down:
-                if vbar.value() > vbar.minimum():
+                if self.view.mapToParent(qc.QPoint(0, 0)).y() < 0:
+                    self.view.move(self.view.x(), self.view.y() + panvalue)
+                elif vbar.value() > vbar.minimum():
                     vbar.triggerAction(qg.QScrollBar.SliderSingleStepSub)
                 else:
                     self.view.move(self.view.x(), self.view.y() + panvalue)
