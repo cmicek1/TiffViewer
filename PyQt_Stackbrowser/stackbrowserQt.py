@@ -6,9 +6,6 @@ import stackbrowserQtUI as ui
 import PointTable as pt
 import StackPoints as sps
 import tiffstack as ts
-import Tkinter as Tk
-import tkFileDialog
-
 
 # Empty color palettes filled in during initialization; public to the whole module for later access
 GREEN = []
@@ -389,11 +386,9 @@ class MainWindow(qg.QMainWindow):
             self.stack = args[0]
 
         if not find_points:
-            root = Tk.Tk()
-            root.attributes('-topmost', True)
-            root.withdraw()
-            fpath = tkFileDialog.askopenfilename(
-                initialdir=os.path.expanduser('~/Desktop'))
+
+            fpath = str(qg.QFileDialog.getOpenFileName(self, "Open Hypserstack", qc.QDir.homePath(), "TIF Files (*.tif "
+                                                                                                 "*.tiff)"))
             try:
                 self.stack = ts.TiffStack(fpath)
             except IOError:

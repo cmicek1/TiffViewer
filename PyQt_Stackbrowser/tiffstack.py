@@ -40,6 +40,8 @@ class TiffStack:
 
         :type directory: str
         """
+        if directory == '':
+            raise IOError
         self.directory = directory
         self.fname = os.path.basename(self.directory)
         _ = self.fname.split('_')
