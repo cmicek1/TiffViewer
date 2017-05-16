@@ -48,7 +48,7 @@ class TiffStack:
 
         if len(_) == 3:
             try:
-                self.date, self.animal, self.channel = (_[0], _[1], _[2].split('.')[0])
+                self.animal, self.stacknum, self.channel = (_[0], int(_[1][1:]), _[2].split('.')[0])
             except IndexError:
                 pass
             self.type = 'Spines'
