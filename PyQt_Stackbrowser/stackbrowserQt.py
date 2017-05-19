@@ -1,4 +1,5 @@
 import sys, os
+import copy as cp
 import numpy as np
 import PyQt4.QtCore as qc
 import PyQt4.QtGui as qg
@@ -6,10 +7,13 @@ import stackbrowserQtUI as ui
 import PointTable as pt
 import StackPoints as sps
 import tiffstack as ts
+import TimeSeriesHelper as tsh
 
 # Empty color palettes filled in during initialization; public to the whole module for later access
 GREEN = []
 RED = []
+ID = 0
+ts_helper = None
 
 
 class MainWindow(qg.QMainWindow):
@@ -32,6 +36,14 @@ class MainWindow(qg.QMainWindow):
         setter.action_PointList.toggled.connect(lambda change, func=self.action_handler: func('point_list', change))
 
         # Add additional relevant attributes
+        global ID
+        if ID != 0:
+            ID += 1
+            self.id = cp.copy(ID)
+        else:
+            self.id = cp.copy(ID)
+            ID += 1
+
         self.stack = None
         self.open_stacks = []
         self.scroll_z = None
@@ -253,6 +265,21 @@ class MainWindow(qg.QMainWindow):
 
         qg.QMainWindow.keyPressEvent(self, event)
 
+    def closeEvent(self, event):
+        """
+        Overrides default QMainWindow.closeEvent to additionally delete the closed window from the application's
+        TimeSeriesHelper.
+        
+        :param event: The accepted QKeyEvent
+
+        :type event: PyQt4.QtGui.QKeyEvent
+        
+        :return: None
+        """
+        global ts_helper
+        ts_helper.delete_window(self)
+        qg.QMainWindow.closeEvent(self, event)
+
     def view_slice(self, z):
         """
         Change the current view to the provided slice
@@ -313,11 +340,15 @@ class MainWindow(qg.QMainWindow):
         if len(args) == 1:
             node = args[0]
             cur_model = self.list.model()
+            if self.stack.type == 'Vascular':
+                ind = node.dfentry.i
+            elif self.stack.type == 'Spines':
+                ind = node.dfentry.Idx
             if not deselect:
-                self.list.selectionModel().select(cur_model.index(node.dfentry.i, 0),
+                self.list.selectionModel().select(cur_model.index(ind, 0),
                                                   qg.QItemSelectionModel.Select | qg.QItemSelectionModel.Rows)
             else:
-                self.list.selectionModel().select(cur_model.index(node.dfentry.i, 0),
+                self.list.selectionModel().select(cur_model.index(ind, 0),
                                                   qg.QItemSelectionModel.Deselect | qg.QItemSelectionModel.Rows)
 
         if len(args) == 2:
@@ -333,7 +364,7 @@ class MainWindow(qg.QMainWindow):
             if self.scroll_z is not None:
                 prev_scroll_range = range(self.scroll_z - self.points.offset, self.scroll_z + self.points.offset + 1)
 
-            for i, node in enumerate(selected.indexes()):
+            for node in selected.indexes():
                 if node.row() != prev_row:
                     prev_row = node.row()
                     n = self.points.nodes_by_idx[node.row()]
@@ -442,13 +473,19 @@ class MainWindow(qg.QMainWindow):
 
         self.minContrastSpinBox.valueChanged.connect(self._change_min_intensity)
         self.maxContrastSpinBox.valueChanged.connect(self._change_max_intensity)
+        global ts_helper
+        ts_helper.setup_map(self.id)
 
     def _find_points(self, *args, **kwargs):
-        new_stack = self._change_view(qc.Qt.Key_Right, find_points=True)
-        if new_stack is not None:
-            win2 = MainWindow()
-            win2.show()
-            win2.action_handler('open', new_stack, find_points=True)
+        global ts_helper
+        if len(ts_helper.windict) == 1:
+            new_stack = self._change_view(qc.Qt.Key_Right, find_points=True)
+            if new_stack is not None:
+                win2 = MainWindow()
+                ts_helper.add_window(win2)
+                win2.show()
+                win2.action_handler('open', new_stack, find_points=True)
+        ts_helper.map_table.show()
 
     def _point_list(self, *args, **kwargs):
         view = args[0]
@@ -700,6 +737,8 @@ def main():
 
     app = qg.QApplication(sys.argv)
     window = MainWindow()
+    global ts_helper
+    ts_helper = tsh.TimeSeriesHelper(window)
     window.show()
     app.aboutToQuit.connect(_exit_handler)
     return app.exec_()
