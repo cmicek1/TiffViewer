@@ -27,16 +27,16 @@ At startup, you will need to choose a hyperstack to open. Depending on your desi
 ### Vascular Mode
 
 * __nodes/__
-  - Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_nT.txt
+  - Xyyyymmdd_aANIMALNUMBER_STACKNUMBER_nT.txt
   - ...
 * __edges/__
-  - Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_eT.txt
+  - Xyyyymmdd_aANIMALNUMBER_STACKNUMBER_eT.txt
   - ...
 * __slabs/__
-  - Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_sD.txt
+  - Xyyyymmdd_aANIMALNUMBER_STACKNUMBER_sD.txt
   - ...
-* Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_ch1.tif
-* Xyyyymmdd_aANUMALNUMBER_STACKNUMBER_ch2.tif
+* Xyyyymmdd_aANIMALNUMBER_STACKNUMBER_ch1.tif
+* Xyyyymmdd_aANIMALNUMBER_STACKNUMBER_ch2.tif
 * ...
 
 ### Spine Mode
